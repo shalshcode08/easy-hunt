@@ -1,3 +1,7 @@
+import { Page } from "playwright";
+import { browserPool } from "@/lib/browser";
+import { logger } from "@/lib/logger";
+
 export type JobSource = "linkedin" | "naukri" | "indeed";
 
 export interface ScrapeQuery {
@@ -20,6 +24,26 @@ export interface RawJob {
 export abstract class BaseScraper {
   abstract source: JobSource;
   abstract scrape(query: ScrapeQuery): Promise<RawJob[]>;
+
+  protected async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
+    const maxAttempts = 3;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await browserPool.withPage(fn);
+      } catch (err) {
+        lastError = err;
+        if (attempt < maxAttempts) {
+          const delay = attempt * 1000;
+          logger.warn({ source: this.source, attempt, delay }, "scrape attempt failed, retrying");
+          await new Promise((r) => setTimeout(r, delay));
+        }
+      }
+    }
+
+    throw lastError;
+  }
 
   protected randomDelay(min = 800, max = 2500): Promise<void> {
     const ms = Math.floor(Math.random() * (max - min + 1)) + min;

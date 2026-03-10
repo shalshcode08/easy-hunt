@@ -1,6 +1,10 @@
 import request from "supertest";
 
-// Mock Clerk middleware — no real Clerk keys in test env
+jest.mock("@/middleware/rateLimit", () => ({
+  apiRateLimit: (_req: any, _res: any, next: any) => next(),
+  scrapeRateLimit: (_req: any, _res: any, next: any) => next(),
+}));
+
 jest.mock("@/middleware/auth", () => ({
   clerkAuth: (_req: any, _res: any, next: any) => next(),
   requireAuth: (_req: any, _res: any, next: any) => next(),

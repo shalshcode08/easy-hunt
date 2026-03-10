@@ -20,10 +20,10 @@ export const getJobsQuerySchema = z.object({
 
 export type GetJobsQuery = z.infer<typeof getJobsQuerySchema>;
 
-const datePostedCutoff: Record<string, Date> = {
-  "24h": new Date(Date.now() - 24 * 60 * 60 * 1000),
-  "7d": new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-  "30d": new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+const datePostedMs: Record<string, number> = {
+  "24h": 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000,
 };
 
 export const JobsService = {
@@ -38,7 +38,7 @@ export const JobsService = {
       city ? eq(jobs.city, city) : undefined,
       jobType ? eq(jobs.jobType, jobType) : undefined,
       workMode ? eq(jobs.workMode, workMode) : undefined,
-      datePosted ? gte(jobs.postedAt, datePostedCutoff[datePosted]!) : undefined,
+      datePosted ? gte(jobs.postedAt, new Date(Date.now() - datePostedMs[datePosted]!)) : undefined,
       salaryMin ? gte(jobs.salaryMin, salaryMin) : undefined,
       salaryMax ? lte(jobs.salaryMax, salaryMax) : undefined,
     );
