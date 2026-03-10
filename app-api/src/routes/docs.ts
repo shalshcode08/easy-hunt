@@ -4,16 +4,20 @@ import { buildOpenApiDocument } from "@/lib/openapi";
 
 export const docsRouter = Router();
 
+const doc = buildOpenApiDocument();
+const docJson = JSON.stringify(doc);
+const docYaml = dump(doc);
+
 docsRouter.get("/openapi.json", (_req, res) => {
-  res.json(buildOpenApiDocument());
+  res.setHeader("Content-Type", "application/json");
+  res.send(docJson);
 });
 
 docsRouter.get("/openapi.yaml", (_req, res) => {
   res.setHeader("Content-Type", "text/yaml");
-  res.send(dump(buildOpenApiDocument()));
+  res.send(docYaml);
 });
 
-// Serve ReDoc UI
 docsRouter.get("/", (_req, res) => {
   res.setHeader("Content-Type", "text/html");
   res.send(`<!DOCTYPE html>

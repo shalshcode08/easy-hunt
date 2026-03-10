@@ -23,6 +23,9 @@ app.use(
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
         "script-src": ["'self'", "https://cdn.jsdelivr.net"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        "font-src": ["'self'", "https://fonts.gstatic.com"],
+        "img-src": ["'self'", "data:", "https:"],
         "worker-src": ["blob:"],
       },
     },
@@ -55,7 +58,9 @@ if (require.main === module) {
         process.exit(1);
       }, 10_000);
       try {
-        await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+        await new Promise<void>((resolve, reject) =>
+          server.close((err) => (err ? reject(err) : resolve())),
+        );
         await stopBoss();
         await browserPool.close();
         await closeDb();

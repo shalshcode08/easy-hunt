@@ -1,7 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { createError } from "@/middleware/errorHandler";
 
-// 60 requests per minute per authenticated user (keyed by clerk_id)
 export const apiRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
@@ -13,7 +12,6 @@ export const apiRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-// Stricter limit for scrape trigger endpoint
 export const scrapeRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 5,

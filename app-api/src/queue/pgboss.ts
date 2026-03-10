@@ -9,14 +9,16 @@ export const getBoss = (): PgBoss => {
   return boss;
 };
 
-export const startBoss = async (): Promise<PgBoss> => {
-  const connectionString = (env.PGBOSS_DATABASE_URL ?? env.DATABASE_URL)
-    .replace("sslmode=require", "sslmode=verify-full")
-    .replace("channel_binding=require&", "")
-    .replace("&channel_binding=require", "");
+function normalizePgUrl(raw: string): string {
+  const url = new URL(raw);
+  url.searchParams.set("sslmode", "verify-full");
+  url.searchParams.delete("channel_binding");
+  return url.toString();
+}
 
+export const startBoss = async (): Promise<PgBoss> => {
   boss = new PgBoss({
-    connectionString,
+    connectionString: normalizePgUrl(env.PGBOSS_DATABASE_URL ?? env.DATABASE_URL),
     ssl: { rejectUnauthorized: false },
     max: 5,
   });
