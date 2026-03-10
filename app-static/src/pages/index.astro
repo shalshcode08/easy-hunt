@@ -1,0 +1,833 @@
+---
+const title = "EasyHunt — Every Tech Job in India, One Feed";
+const description = "EasyHunt aggregates LinkedIn, Naukri, and Indeed into one unified, filterable job feed for Indian software engineers.";
+const url = "https://easyhunt.in";
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "EasyHunt",
+  description,
+  url: "https://easyhunt.in",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+  audience: { "@type": "Audience", audienceType: "Software Engineers, Tech Professionals" },
+});
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href={url} />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={url} />
+  <meta property="og:site_name" content="EasyHunt" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script type="application/ld+json" set:html={jsonLd} />
+  <style>
+    :root {
+      --bg:          #0c0c0c;
+      --bg-2:        #141414;
+      --bg-card:     #191919;
+      --border:      rgba(255,255,255,0.07);
+      --border-h:    rgba(255,255,255,0.14);
+      --text:        #ececee;
+      --text-2:      rgba(236,236,238,0.55);
+      --text-3:      rgba(236,236,238,0.28);
+      --mint:        #59c77a;
+      --mint-dim:    rgba(89,199,122,0.1);
+      --mint-border: rgba(89,199,122,0.22);
+      --peach:       #ff9f68;
+      --blue:        #6b9eff;
+      --r:           18px;
+      --r-lg:        24px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 400;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav.top {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(14px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+    gap: 50%;
+    padding: 0 30px;
+    }
+
+    .nav-logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.3rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo em { color: var(--mint); font-style: italic; }
+
+    .nav-cta {
+      padding: 9px 22px;
+      background: var(--mint);
+      color: #0c0c0c;
+      font-size: 0.85rem; font-weight: 600;
+      border-radius: 80px;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.2s;
+      white-space: nowrap;
+    }
+    .nav-cta:hover { opacity: 0.85; transform: scale(1.02); }
+
+    /* ── WRAPPER ── */
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: clamp(140px, 14vw, 180px) 0 clamp(80px, 10vw, 120px);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(64px, 10vw, 96px);
+      align-items: center;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      animation: fadeUp .6s ease both;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 14px;
+      background: var(--mint-dim);
+      border: 1px solid var(--mint-border);
+      border-radius: 80px;
+      font-size: 0.72rem; font-weight: 500;
+      color: var(--mint);
+      margin-bottom: 28px;
+    }
+    .hero-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+    h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(3.5rem, 8vw, 6rem);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    h1 em { font-style: italic; color: var(--mint); }
+
+    .hero-desc {
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+      font-weight: 300;
+      color: var(--text-2);
+      max-width: 600px;
+      line-height: 1.75;
+      margin-bottom: 40px;
+    }
+
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-fill {
+      display: inline-block;
+      padding: 13px 28px;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 0.88rem; font-weight: 500;
+      border-radius: 80px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-fill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+    }
+
+    .btn-ghost {
+      display: inline-block;
+      padding: 12px 24px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 0.88rem; font-weight: 400;
+      border-radius: 80px;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--border-h); color: var(--text); }
+
+    /* ── FLOATING CARDS ── */
+    .hero-right {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin: 0 auto;
+      animation: fadeUp .7s ease .15s both;
+    }
+
+    .float-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+      transition: transform 0.3s ease;
+    }
+
+    .float-card:nth-child(1) { z-index: 3; }
+    .float-card:nth-child(2) { z-index: 2; opacity: 0.85; transform: scale(0.95); margin-top: -72px; }
+    .float-card:nth-child(3) { z-index: 1; opacity: 0.6; transform: scale(0.9); margin-top: -72px; }
+
+    .float-card:nth-child(1):hover { transform: translateY(-4px); }
+    .float-card:nth-child(2):hover { transform: scale(0.95) translateY(-4px); }
+    .float-card:nth-child(3):hover { transform: scale(0.9) translateY(-4px); }
+
+    .fc-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .fc-title { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+
+    .fc-badge {
+      font-size: 0.58rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 6px;
+    }
+    .fc-badge.li { background: rgba(107,158,255,0.12); color: var(--blue); }
+    .fc-badge.nk { background: rgba(255,159,104,0.12); color: var(--peach); }
+    .fc-badge.in { background: var(--mint-dim); color: var(--mint); }
+
+    .fc-meta { font-size: 0.7rem; color: var(--text-3); }
+
+    .fc-save {
+      margin-top: 12px;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.7rem; color: var(--mint);
+    }
+    .fc-save svg { width: 12px; height: 12px; }
+
+    /* ── SECTION HEADER ── */
+    .sec-hd { text-align: center; margin-bottom: 52px; }
+    .sec-tag {
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--mint); margin-bottom: 14px;
+    }
+    h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(1.9rem, 3.5vw, 2.9rem);
+      font-weight: 400; line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    h2 em { font-style: italic; color: var(--text-2); }
+    .sec-sub {
+      font-size: 0.95rem; font-weight: 300;
+      color: var(--text-2);
+      margin: 14px auto 0; max-width: 440px;
+      line-height: 1.75;
+    }
+
+    /* ── FEATURES ── */
+    .features { padding: 100px 0; padding-top: 0; }
+
+    .f-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .f-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 32px 28px;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .f-card:hover {
+      border-color: var(--border-h);
+      transform: translateY(-2px);
+    }
+
+    .f-icon {
+      width: 40px; height: 40px;
+      border-radius: 11px;
+      background: var(--mint-dim);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      color: var(--mint);
+    }
+    .f-icon svg { width: 18px; height: 18px; }
+
+    .f-card h3 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.25rem; font-weight: 400;
+      margin-bottom: 8px;
+    }
+    .f-card p {
+      font-size: 0.85rem; font-weight: 300;
+      color: var(--text-2); line-height: 1.7;
+    }
+
+    /* ── SOURCES ── */
+    .sources { padding: 0 0 100px; }
+
+    .sources-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    .sources-top {
+      padding: 40px 40px 32px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sources-top h2 { text-align: left; }
+
+    .sources-total {
+      text-align: right;
+    }
+    .sources-total-num {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.5rem; font-weight: 400;
+      color: var(--text); line-height: 1;
+    }
+    .sources-total-num span { color: var(--mint); }
+    .sources-total-label {
+      font-size: 0.7rem; color: var(--text-3);
+      margin-top: 4px;
+    }
+
+    .sources-platforms {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .sp-item {
+      padding: 28px 32px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      transition: background 0.2s;
+    }
+    .sp-item:last-child { border-right: none; }
+    .sp-item:hover { background: rgba(255,255,255,0.02); }
+
+    .sp-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-bottom: 14px;
+    }
+    .sp-item:nth-child(1) .sp-dot { background: var(--blue); }
+    .sp-item:nth-child(2) .sp-dot { background: var(--peach); }
+    .sp-item:nth-child(3) .sp-dot { background: var(--mint); }
+
+    .sp-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.3rem; font-weight: 400;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .sp-desc {
+      font-size: 0.78rem; font-weight: 300;
+      color: var(--text-3); line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .sp-stat { font-size: 1.4rem; font-weight: 300; color: var(--text); }
+    .sp-stat-label { font-size: 0.65rem; color: var(--text-3); margin-top: 2px; }
+
+    /* ── HOW / ACCORDION ── */
+    .how { padding: 0 0 100px; }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(32px, 6vw, 72px);
+      align-items: start;
+    }
+
+    .acc-list { display: flex; flex-direction: column; margin-top: 36px; }
+    .acc-item { border-bottom: 1px solid var(--border); }
+
+    .acc-btn {
+      width: 100%;
+      display: flex; align-items: center; gap: 14px;
+      padding: 20px 0;
+      background: none; border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.98rem; font-weight: 400;
+      color: var(--text);
+      cursor: pointer; text-align: left;
+      transition: color 0.2s;
+    }
+    .acc-btn:hover { color: var(--mint); }
+    .acc-btn:hover .acc-num { color: var(--mint); }
+
+    .acc-num {
+      font-size: 0.68rem; font-weight: 500;
+      color: var(--text-3);
+      min-width: 20px;
+      transition: color 0.2s;
+    }
+
+    .acc-label { flex: 1; }
+
+    .acc-icon {
+      width: 20px; height: 20px; flex-shrink: 0;
+      color: var(--text-3);
+      transition: transform 0.3s ease, color 0.2s;
+    }
+    .acc-btn:hover .acc-icon { color: var(--mint); }
+    .acc-item.open .acc-icon { transform: rotate(45deg); color: var(--mint); }
+
+    .acc-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .acc-item.open .acc-body { max-height: 200px; }
+
+    .acc-content {
+      padding: 0 0 20px 34px;
+      font-size: 0.88rem; font-weight: 300;
+      color: var(--text-2); line-height: 1.8;
+    }
+
+    /* PIPELINE */
+    .pipe-visual {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .pipe-stage {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: border-color 0.2s;
+    }
+    .pipe-stage:hover { border-color: var(--border-h); }
+
+    .pipe-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%; flex-shrink: 0;
+    }
+    .pd-saved    { background: var(--blue); }
+    .pd-applied  { background: var(--peach); }
+    .pd-int      { background: #f5d76e; }
+    .pd-offered  { background: var(--mint); }
+    .pd-rejected { background: #ff5f57; }
+
+    .pipe-label { flex: 1; font-size: 0.88rem; font-weight: 400; }
+
+    .pipe-badge {
+      font-size: 0.62rem; font-weight: 400;
+      padding: 2px 10px; border-radius: 80px;
+      color: var(--text-3);
+      border: 1px solid var(--border);
+    }
+
+    /* ── CTA ── */
+    .cta { padding: 0 0 100px; text-align: center; }
+
+    .cta-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: clamp(48px, 8vw, 80px) clamp(24px, 6vw, 64px);
+      position: relative; overflow: hidden;
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: -40%; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 280px;
+      background: radial-gradient(ellipse, rgba(89,199,122,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-card h2 { margin-bottom: 14px; position: relative; }
+    .cta-card p {
+      font-size: 1rem; font-weight: 300;
+      color: var(--text-2); margin-bottom: 36px;
+      position: relative;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .ft-left { font-size: 0.75rem; color: var(--text-3); }
+    .ft-links { display: flex; gap: 18px; list-style: none; }
+    .ft-links a {
+      font-size: 0.72rem; color: var(--text-3);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .ft-links a:hover { color: var(--text); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      /* Hero */
+      .hero {
+        padding: 110px 0 60px;
+        gap: 48px;
+      }
+      h1 { font-size: clamp(2.8rem, 8vw, 3.8rem); }
+      .hero-desc { max-width: 100%; }
+
+      /* Floating cards */
+      .float-card { max-width: 320px; padding: 20px; }
+      .float-card:nth-child(2) { margin-top: -60px; }
+      .float-card:nth-child(3) { margin-top: -60px; }
+
+      /* Features */
+      .f-grid { grid-template-columns: 1fr 1fr; }
+
+      /* Sources */
+      .sources-top { grid-template-columns: 1fr; gap: 16px; }
+      .sources-total { text-align: left; }
+      .sources-platforms { grid-template-columns: 1fr; }
+      .sp-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .sp-item:last-child { border-bottom: none; }
+
+      /* How */
+      .how-grid { grid-template-columns: 1fr; }
+
+      /* CTA */
+      .cta-card { padding: 48px 24px; }
+
+      /* Footer */
+      footer { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+
+    @media (max-width: 540px) {
+      .f-grid { grid-template-columns: 1fr; }
+      .hero-right { display: none; }
+      h1 { font-size: clamp(2.6rem, 10vw, 3.4rem); }
+      .hero-btns { flex-direction: column; }
+      .btn-fill, .btn-ghost { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="top">
+    <a href="/" class="nav-logo">Easy<em>Hunt</em></a>
+    <a href="#" class="nav-cta">Get started</a>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <!-- Lucide: sparkles -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+          Free forever · No ads · No sign-up needed
+        </div>
+        <h1>Stop switching<br />between <em>portals</em></h1>
+        <p class="hero-desc">LinkedIn, Naukri, and Indeed in one clean feed. Filter, save, and track every application — without juggling three tabs.</p>
+        <div class="hero-btns">
+          <a href="#" class="btn-fill">Start searching →</a>
+          <a href="#how" class="btn-ghost">How it works</a>
+        </div>
+      </div>
+
+      <div class="hero-right" aria-hidden="true">
+        <div class="float-card">
+          <div class="fc-row">
+            <span class="fc-title">Senior Backend Engineer</span>
+            <span class="fc-badge li">LinkedIn</span>
+          </div>
+          <div class="fc-meta">Razorpay · Bengaluru · ₹32–48 LPA</div>
+          <div class="fc-save">
+            <!-- Lucide: bookmark -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            Saved
+          </div>
+        </div>
+        <div class="float-card">
+          <div class="fc-row">
+            <span class="fc-title">Staff SDE — Payments</span>
+            <span class="fc-badge nk">Naukri</span>
+          </div>
+          <div class="fc-meta">PhonePe · Remote · ₹45–65 LPA</div>
+        </div>
+        <div class="float-card">
+          <div class="fc-row">
+            <span class="fc-title">Platform Engineer</span>
+            <span class="fc-badge in">Indeed</span>
+          </div>
+          <div class="fc-meta">Flipkart · Bengaluru · ₹28–42 LPA</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+      <div class="sec-hd">
+        <span class="sec-tag">Features</span>
+        <h2>Built for engineers<br />who value <em>their time</em></h2>
+        <p class="sec-sub">No noise. Every feature exists to get you to the right job, faster.</p>
+      </div>
+
+      <div class="f-grid">
+        <div class="f-card">
+          <div class="f-icon">
+            <!-- Lucide: layers -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+          </div>
+          <h3>Unified Feed</h3>
+          <p>Three platforms, one scroll. Deduplicated, sorted by freshness, updated every 4 hours.</p>
+        </div>
+        <div class="f-card">
+          <div class="f-icon">
+            <!-- Lucide: sliders-horizontal -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+          </div>
+          <h3>Smart Filters</h3>
+          <p>Source, location, work mode, salary, role type — all at once. Instant results, no page reloads.</p>
+        </div>
+        <div class="f-card">
+          <div class="f-icon">
+            <!-- Lucide: kanban -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v11"/><path d="M12 5v6"/><path d="M18 5v14"/><rect width="4" height="5" x="4" y="14" rx="1"/><rect width="4" height="6" x="10" y="9" rx="1"/><rect width="4" height="4" x="16" y="17" rx="1"/></svg>
+          </div>
+          <h3>Track Applications</h3>
+          <p>Saved → Applied → Interviewing → Offered. A simple pipeline that replaces your spreadsheet.</p>
+        </div>
+        <div class="f-card">
+          <div class="f-icon">
+            <!-- Lucide: refresh-cw -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          </div>
+          <h3>4-Hour Refresh</h3>
+          <p>We scrape continuously. See listings before they fill up. First movers get the best roles.</p>
+        </div>
+        <div class="f-card">
+          <div class="f-icon">
+            <!-- Lucide: bookmark -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          </div>
+          <h3>Save & Compare</h3>
+          <p>Bookmark roles. Revisit, compare, decide at your own pace — no browser tab chaos.</p>
+        </div>
+        <div class="f-card">
+          <div class="f-icon">
+            <!-- Lucide: gift -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
+          </div>
+          <h3>Free Forever</h3>
+          <p>No premium tiers, no ads, no sponsored results. Pure, honest job search.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOURCES -->
+    <section class="sources" id="sources">
+      <div class="sources-card">
+        <div class="sources-top">
+          <div>
+            <span class="sec-tag">Where we look</span>
+            <h2>Every platform.<br /><em>One place.</em></h2>
+          </div>
+          <div class="sources-total">
+            <div class="sources-total-num">14<span>k+</span></div>
+            <div class="sources-total-label">jobs indexed every day</div>
+          </div>
+        </div>
+        <div class="sources-platforms">
+          <div class="sp-item">
+            <div class="sp-dot"></div>
+            <div class="sp-name">LinkedIn</div>
+            <div class="sp-desc">The world's largest professional network. Strong signal for senior tech roles and MNC postings.</div>
+            <div class="sp-stat">4,200+</div>
+            <div class="sp-stat-label">tech roles / day</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-dot"></div>
+            <div class="sp-name">Naukri</div>
+            <div class="sp-desc">India's dominant board. Unmatched depth in domestic IT firms, product startups, and mid-market companies.</div>
+            <div class="sp-stat">6,800+</div>
+            <div class="sp-stat-label">listings / day</div>
+          </div>
+          <div class="sp-item">
+            <div class="sp-dot"></div>
+            <div class="sp-name">Indeed</div>
+            <div class="sp-desc">Global reach, strong India presence. Ideal for remote-first and cross-border opportunities.</div>
+            <div class="sp-stat">3,100+</div>
+            <div class="sp-stat-label">aggregated / day</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS / ACCORDION -->
+    <section class="how" id="how">
+      <div class="how-grid">
+        <div>
+          <span class="sec-tag">How it works</span>
+          <h2>Four steps to<br />your <em>next role</em></h2>
+          <p class="sec-sub" style="margin-inline:0;">From discovery to offer — a focused, manageable process.</p>
+
+          <div class="acc-list">
+            <div class="acc-item open">
+              <button class="acc-btn" data-acc>
+                <span class="acc-num">01</span>
+                <span class="acc-label">Browse the unified feed</span>
+                <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="acc-body">
+                <div class="acc-content">Open EasyHunt and see fresh listings from LinkedIn, Naukri, and Indeed — sorted by recency, fully deduplicated.</div>
+              </div>
+            </div>
+            <div class="acc-item">
+              <button class="acc-btn" data-acc>
+                <span class="acc-num">02</span>
+                <span class="acc-label">Filter to your criteria</span>
+                <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="acc-body">
+                <div class="acc-content">Set your location, salary range, work mode, and source preferences. The feed narrows to exactly what fits your life.</div>
+              </div>
+            </div>
+            <div class="acc-item">
+              <button class="acc-btn" data-acc>
+                <span class="acc-num">03</span>
+                <span class="acc-label">Save your best matches</span>
+                <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="acc-body">
+                <div class="acc-content">Bookmark roles you want to pursue. They land in your personal list — organized, never lost in browser tabs.</div>
+              </div>
+            </div>
+            <div class="acc-item">
+              <button class="acc-btn" data-acc>
+                <span class="acc-num">04</span>
+                <span class="acc-label">Track every application</span>
+                <svg class="acc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="acc-body">
+                <div class="acc-content">Move saved jobs through your pipeline as you progress. Know exactly where you stand in every active application.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pipe-visual">
+          <div class="pipe-stage">
+            <span class="pipe-dot pd-saved"></span>
+            <span class="pipe-label">Saved</span>
+            <span class="pipe-badge">12 jobs</span>
+          </div>
+          <div class="pipe-stage">
+            <span class="pipe-dot pd-applied"></span>
+            <span class="pipe-label">Applied</span>
+            <span class="pipe-badge">5 jobs</span>
+          </div>
+          <div class="pipe-stage">
+            <span class="pipe-dot pd-int"></span>
+            <span class="pipe-label">Interviewing</span>
+            <span class="pipe-badge">2 jobs</span>
+          </div>
+          <div class="pipe-stage">
+            <span class="pipe-dot pd-offered"></span>
+            <span class="pipe-label">Offered</span>
+            <span class="pipe-badge">1 job</span>
+          </div>
+          <div class="pipe-stage">
+            <span class="pipe-dot pd-rejected"></span>
+            <span class="pipe-label">Rejected / Closed</span>
+            <span class="pipe-badge">3 jobs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+      <div class="cta-card">
+        <h2>Ready to simplify<br /><em>your search?</em></h2>
+        <p>Every tech job in India. One feed. Zero cost.</p>
+        <a href="#" class="btn-fill" style="position:relative;">Get started for free →</a>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <span class="ft-left">© 2025 EasyHunt</span>
+    </footer>
+  </div>
+
+
+
+  <!-- is:inline keeps this out of Astro's module bundler so it's globally accessible -->
+  <script is:inline>
+    document.querySelectorAll('[data-acc]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = btn.closest('.acc-item');
+        var list = btn.closest('.acc-list');
+        var wasOpen = item.classList.contains('open');
+        list.querySelectorAll('.acc-item').forEach(function(i) { i.classList.remove('open'); });
+        if (!wasOpen) item.classList.add('open');
+      });
+    });
+  </script>
+
+</body>
+</html>
