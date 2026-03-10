@@ -10,8 +10,13 @@ export const getBoss = (): PgBoss => {
 };
 
 export const startBoss = async (): Promise<PgBoss> => {
+  const connectionString = (env.PGBOSS_DATABASE_URL ?? env.DATABASE_URL)
+    .replace("sslmode=require", "sslmode=verify-full")
+    .replace("channel_binding=require&", "")
+    .replace("&channel_binding=require", "");
+
   boss = new PgBoss({
-    connectionString: env.DATABASE_URL,
+    connectionString,
     ssl: { rejectUnauthorized: false },
     max: 5,
   });

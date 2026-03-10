@@ -14,7 +14,9 @@ const scrapers: Record<string, BaseScraper> = {
   indeed: new IndeedScraper(),
 };
 
-export const registerWorkers = (boss: PgBoss): void => {
+export const registerWorkers = async (boss: PgBoss): Promise<void> => {
+  await boss.createQueue(QUEUE_NAMES.SCRAPE);
+
   boss.work<ScrapeJobData>(QUEUE_NAMES.SCRAPE, { localConcurrency: 1 }, async (jobs) => {
     for (const job of jobs) {
       const { source, role, location, limit } = job.data;

@@ -17,7 +17,17 @@ import { registerRoutes } from "@/routes";
 export const app = express();
 
 app.use(httpLogger);
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "script-src": ["'self'", "https://cdn.jsdelivr.net"],
+        "worker-src": ["blob:"],
+      },
+    },
+  }),
+);
 app.use(clerkAuth);
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(compression());
@@ -31,7 +41,7 @@ app.use(errorHandler);
 if (require.main === module) {
   (async () => {
     const boss = await startBoss();
-    registerWorkers(boss);
+    await registerWorkers(boss);
     await registerSchedules(boss);
 
     const server = app.listen(env.PORT, () => {

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
+  PGBOSS_DATABASE_URL: z.string().min(1).optional(),
   CLERK_SECRET_KEY: z.string().min(1),
   ADMIN_KEY: z.string().min(1),
   PORT: z.coerce.number().default(3001),
