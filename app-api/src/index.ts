@@ -6,6 +6,9 @@ import compression from "compression";
 import { env } from "@/env";
 import { httpLogger, logger } from "@/lib/logger";
 import { closeDb } from "@/db/client";
+import { startBoss, stopBoss } from "@/queue/pgboss";
+import { registerWorkers } from "@/queue/workers";
+import { registerSchedules } from "@/queue/scheduler";
 import { errorHandler } from "@/middleware/errorHandler";
 import { clerkAuth } from "@/middleware/auth";
 import { registerRoutes } from "@/routes";
@@ -25,23 +28,30 @@ registerRoutes(app);
 app.use(errorHandler);
 
 if (require.main === module) {
-  const server = app.listen(env.PORT, () => {
-    logger.info(`app-api running on http://localhost:${env.PORT}`);
-  });
+  (async () => {
+    const boss = await startBoss();
+    registerWorkers(boss);
+    await registerSchedules(boss);
 
-  const shutdown = async (signal: string) => {
-    logger.info(`${signal} received — shutting down`);
-    server.close(async () => {
-      await closeDb();
-      logger.info("shutdown complete");
-      process.exit(0);
+    const server = app.listen(env.PORT, () => {
+      logger.info(`server:[app-api] running on http://localhost:${env.PORT}`);
     });
-    setTimeout(() => {
-      logger.error("forced shutdown after timeout");
-      process.exit(1);
-    }, 10_000);
-  };
 
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
+    const shutdown = async (signal: string) => {
+      logger.info(`${signal} received — shutting down`);
+      server.close(async () => {
+        await stopBoss();
+        await closeDb();
+        logger.info("shutdown complete");
+        process.exit(0);
+      });
+      setTimeout(() => {
+        logger.error("forced shutdown after timeout");
+        process.exit(1);
+      }, 10_000);
+    };
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
+  })();
 }

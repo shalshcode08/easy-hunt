@@ -4,11 +4,10 @@ import { db } from "@/db/client";
 import { jobs } from "@/db/schema";
 import type { NewJob } from "@/db/schema";
 
-export const hashUrl = (url: string): string =>
-  createHash("sha256").update(url).digest("hex");
+export const hashUrl = (url: string): string => createHash("sha256").update(url).digest("hex");
 
 export const upsertJobs = async (
-  newJobs: NewJob[]
+  newJobs: NewJob[],
 ): Promise<{ inserted: number; updated: number }> => {
   if (newJobs.length === 0) return { inserted: 0, updated: 0 };
 

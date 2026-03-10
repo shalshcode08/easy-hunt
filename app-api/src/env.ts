@@ -2,8 +2,6 @@ import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
-  UPSTASH_REDIS_URL: z.url(),
-  UPSTASH_REDIS_TOKEN: z.string().min(1),
   CLERK_SECRET_KEY: z.string().min(1),
   ADMIN_KEY: z.string().min(1),
   PORT: z.coerce.number().default(3001),

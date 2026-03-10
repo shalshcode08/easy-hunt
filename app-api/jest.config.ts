@@ -11,6 +11,7 @@ const config: Config = {
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^pg-boss$": "<rootDir>/tests/__mocks__/pg-boss.ts",
   },
   setupFiles: ["<rootDir>/tests/setup.ts"],
   clearMocks: true,

@@ -5,7 +5,7 @@ import { saveJobSchema, updateSavedJobSchema, getSavedJobsQuerySchema } from "@/
 
 export const savedRouter = Router();
 
-savedRouter.get("/",     validate(getSavedJobsQuerySchema, "query"), getSavedJobs);
-savedRouter.post("/",    validate(saveJobSchema),                    saveJob);
-savedRouter.patch("/:id", validate(updateSavedJobSchema),           updateSavedJob);
-savedRouter.delete("/:id",                                          deleteSavedJob);
+savedRouter.get("/", validate(getSavedJobsQuerySchema, "query"), getSavedJobs);
+savedRouter.post("/", validate(saveJobSchema), saveJob);
+savedRouter.patch("/:id", validate(updateSavedJobSchema), updateSavedJob);
+savedRouter.delete("/:id", deleteSavedJob);

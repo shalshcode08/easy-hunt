@@ -5,39 +5,42 @@ import { jobs } from "@/db/schema";
 import { createError } from "@/middleware/errorHandler";
 
 export const getJobsQuerySchema = z.object({
-  source:     z.enum(["linkedin", "naukri", "indeed"]).optional(),
-  city:       z.string().optional(),
-  jobType:    z.enum(["full_time", "part_time", "contract", "internship", "freelance", "temporary"]).optional(),
-  workMode:   z.enum(["onsite", "remote", "hybrid"]).optional(),
+  source: z.enum(["linkedin", "naukri", "indeed"]).optional(),
+  city: z.string().optional(),
+  jobType: z
+    .enum(["full_time", "part_time", "contract", "internship", "freelance", "temporary"])
+    .optional(),
+  workMode: z.enum(["onsite", "remote", "hybrid"]).optional(),
   datePosted: z.enum(["24h", "7d", "30d"]).optional(),
-  salaryMin:  z.coerce.number().int().positive().optional(),
-  salaryMax:  z.coerce.number().int().positive().optional(),
-  page:       z.coerce.number().int().min(1).default(1),
-  limit:      z.coerce.number().int().min(1).max(100).default(20),
+  salaryMin: z.coerce.number().int().positive().optional(),
+  salaryMax: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export type GetJobsQuery = z.infer<typeof getJobsQuerySchema>;
 
 const datePostedCutoff: Record<string, Date> = {
   "24h": new Date(Date.now() - 24 * 60 * 60 * 1000),
-  "7d":  new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  "7d": new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
   "30d": new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
 };
 
 export const JobsService = {
   getJobs: async (query: GetJobsQuery) => {
-    const { source, city, jobType, workMode, datePosted, salaryMin, salaryMax, page, limit } = query;
+    const { source, city, jobType, workMode, datePosted, salaryMin, salaryMax, page, limit } =
+      query;
 
     const where = and(
       eq(jobs.isActive, true),
       eq(jobs.isDeleted, false),
-      source    ? eq(jobs.source, source)       : undefined,
-      city      ? eq(jobs.city, city)           : undefined,
-      jobType   ? eq(jobs.jobType, jobType)     : undefined,
-      workMode  ? eq(jobs.workMode, workMode)   : undefined,
+      source ? eq(jobs.source, source) : undefined,
+      city ? eq(jobs.city, city) : undefined,
+      jobType ? eq(jobs.jobType, jobType) : undefined,
+      workMode ? eq(jobs.workMode, workMode) : undefined,
       datePosted ? gte(jobs.postedAt, datePostedCutoff[datePosted]!) : undefined,
-      salaryMin  ? gte(jobs.salaryMin, salaryMin) : undefined,
-      salaryMax  ? lte(jobs.salaryMax, salaryMax) : undefined,
+      salaryMin ? gte(jobs.salaryMin, salaryMin) : undefined,
+      salaryMax ? lte(jobs.salaryMax, salaryMax) : undefined,
     );
 
     const [{ total }] = await db.select({ total: count() }).from(jobs).where(where);

@@ -16,7 +16,7 @@ export const registerRoutes = (app: Application) => {
   const v1 = Router();
   v1.use(requireAuth);
   v1.use(apiRateLimit);
-  v1.use("/jobs",  jobsRouter);
+  v1.use("/jobs", jobsRouter);
   v1.use("/saved", savedRouter);
   app.use("/api/v1", v1);
 

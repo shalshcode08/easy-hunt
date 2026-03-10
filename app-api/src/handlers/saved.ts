@@ -1,5 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
-import { SavedService, type SaveJobBody, type UpdateSavedJobBody, type GetSavedJobsQuery } from "@/services/saved";
+import {
+  SavedService,
+  type SaveJobBody,
+  type UpdateSavedJobBody,
+  type GetSavedJobsQuery,
+} from "@/services/saved";
 
 export const getSavedJobs = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -21,7 +26,11 @@ export const saveJob = async (req: Request, res: Response, next: NextFunction) =
 
 export const updateSavedJob = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await SavedService.updateSavedJob(req.clerkId, req.params.id as string, req.body as UpdateSavedJobBody);
+    const result = await SavedService.updateSavedJob(
+      req.clerkId,
+      req.params.id as string,
+      req.body as UpdateSavedJobBody,
+    );
     res.json(result);
   } catch (err) {
     next(err);

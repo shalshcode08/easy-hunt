@@ -9,15 +9,19 @@ export const saveJobSchema = z.object({
 });
 
 export const updateSavedJobSchema = z.object({
-  status: z.enum(["saved", "applied", "interviewing", "offered", "rejected", "withdrawn"]).optional(),
-  notes:  z.string().optional(),
+  status: z
+    .enum(["saved", "applied", "interviewing", "offered", "rejected", "withdrawn"])
+    .optional(),
+  notes: z.string().optional(),
 });
 
-export type SaveJobBody         = z.infer<typeof saveJobSchema>;
-export type UpdateSavedJobBody  = z.infer<typeof updateSavedJobSchema>;
+export type SaveJobBody = z.infer<typeof saveJobSchema>;
+export type UpdateSavedJobBody = z.infer<typeof updateSavedJobSchema>;
 
 export const getSavedJobsQuerySchema = z.object({
-  status: z.enum(["saved", "applied", "interviewing", "offered", "rejected", "withdrawn"]).optional(),
+  status: z
+    .enum(["saved", "applied", "interviewing", "offered", "rejected", "withdrawn"])
+    .optional(),
 });
 
 export type GetSavedJobsQuery = z.infer<typeof getSavedJobsQuerySchema>;
@@ -40,16 +44,13 @@ export const SavedService = {
 
   saveJob: async (clerkId: string, body: SaveJobBody) => {
     return db.transaction(async (tx) => {
-      const [saved] = await tx
-        .insert(savedJobs)
-        .values({ clerkId, jobId: body.jobId })
-        .returning();
+      const [saved] = await tx.insert(savedJobs).values({ clerkId, jobId: body.jobId }).returning();
 
       await tx.insert(savedJobStatusHistory).values({
         savedJobId: saved!.id,
         clerkId,
         fromStatus: null,
-        toStatus:   "saved",
+        toStatus: "saved",
       });
 
       return saved;
@@ -61,7 +62,9 @@ export const SavedService = {
       const [existing] = await tx
         .select()
         .from(savedJobs)
-        .where(and(eq(savedJobs.id, id), eq(savedJobs.clerkId, clerkId), eq(savedJobs.isDeleted, false)));
+        .where(
+          and(eq(savedJobs.id, id), eq(savedJobs.clerkId, clerkId), eq(savedJobs.isDeleted, false)),
+        );
 
       if (!existing) throw createError("Saved job not found", 404, "NOT_FOUND");
 
@@ -69,7 +72,10 @@ export const SavedService = {
         .update(savedJobs)
         .set({
           ...body,
-          appliedAt: body.status === "applied" && existing.status !== "applied" ? new Date() : existing.appliedAt,
+          appliedAt:
+            body.status === "applied" && existing.status !== "applied"
+              ? new Date()
+              : existing.appliedAt,
           updatedAt: new Date(),
         })
         .where(eq(savedJobs.id, id))
@@ -77,10 +83,10 @@ export const SavedService = {
 
       if (body.status && body.status !== existing.status) {
         await tx.insert(savedJobStatusHistory).values({
-          savedJobId:    id,
+          savedJobId: id,
           clerkId,
-          fromStatus:    existing.status,
-          toStatus:      body.status,
+          fromStatus: existing.status,
+          toStatus: body.status,
           notesSnapshot: body.notes ?? existing.notes ?? undefined,
         });
       }
@@ -93,7 +99,9 @@ export const SavedService = {
     const [existing] = await db
       .select()
       .from(savedJobs)
-      .where(and(eq(savedJobs.id, id), eq(savedJobs.clerkId, clerkId), eq(savedJobs.isDeleted, false)));
+      .where(
+        and(eq(savedJobs.id, id), eq(savedJobs.clerkId, clerkId), eq(savedJobs.isDeleted, false)),
+      );
 
     if (!existing) throw createError("Saved job not found", 404, "NOT_FOUND");
 
