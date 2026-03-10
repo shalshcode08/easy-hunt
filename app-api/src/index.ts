@@ -1,8 +1,10 @@
 import express from "express";
+import { docsRouter } from "@/routes/docs";
+import { httpLogger, httpLoggerVerbose } from "@/lib/logger";
 
-const app = express();
-const PORT = process.env.PORT ?? 3001;
+export const app = express();
 
+app.use(httpLogger);
 app.use(express.json());
 
 app.get("/howareyou", (_req, res) => {
@@ -15,6 +17,11 @@ app.get("/howareyou", (_req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`app-api running on http://localhost:${PORT}`);
-});
+app.use("/docs", docsRouter);
+
+if (require.main === module) {
+  const PORT = process.env.PORT ?? 3001;
+  app.listen(PORT, () => {
+    console.log(`app-api running on http://localhost:${PORT}`);
+  });
+}
