@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
-import { JobsService } from "@/services/jobs";
+import { JobsService, type GetJobsQuery } from "@/services/jobs";
 
 export const getJobs = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await JobsService.getJobs(req.query);
+    const result = await JobsService.getJobs(req.query as unknown as GetJobsQuery);
     res.json(result);
   } catch (err) {
     next(err);
