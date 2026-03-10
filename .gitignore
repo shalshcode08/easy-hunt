@@ -13,8 +13,8 @@ dist/
 .env.local
 .env.*.local
 
-# bun
-bun.lockb
+# test coverage
+coverage/
 
 # misc
 .DS_Store
