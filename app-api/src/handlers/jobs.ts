@@ -1,0 +1,20 @@
+import type { Request, Response, NextFunction } from "express";
+import { JobsService } from "@/services/jobs";
+
+export const getJobs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await JobsService.getJobs(req.query);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getJobById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const job = await JobsService.getJobById(req.params.id as string);
+    res.json(job);
+  } catch (err) {
+    next(err);
+  }
+};

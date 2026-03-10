@@ -1,25 +1,51 @@
+import "dotenv/config";
 import express from "express";
-import { docsRouter } from "@/routes/docs";
-import { httpLogger, httpLoggerVerbose } from "@/lib/logger";
+import helmet from "helmet";
+import cors from "cors";
+import compression from "compression";
+import { env } from "@/env";
+import { httpLogger, logger } from "@/lib/logger";
+import { closeDb } from "@/db/client";
+import { errorHandler } from "@/middleware/errorHandler";
+import { clerkAuth } from "@/middleware/auth";
+import { registerRoutes } from "@/routes";
 
 export const app = express();
 
+// ── Global middleware ─────────────────────────────────────────────────────────
 app.use(httpLogger);
+app.use(helmet());
+app.use(clerkAuth);
+app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(compression());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get("/howareyou", (_req, res) => {
-  res.json({
-    status: "alive",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
+// ── Routes ────────────────────────────────────────────────────────────────────
+registerRoutes(app);
 
-app.use("/docs", docsRouter);
+// ── Global error handler (must be last) ──────────────────────────────────────
+app.use(errorHandler);
 
+// ── Server bootstrap ──────────────────────────────────────────────────────────
 if (require.main === module) {
-  const PORT = process.env.PORT ?? 3001;
-  app.listen(PORT, () => {
-    console.log(`app-api running on http://localhost:${PORT}`);
+  const server = app.listen(env.PORT, () => {
+    logger.info(`app-api running on http://localhost:${env.PORT}`);
   });
+
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} received — shutting down`);
+    server.close(async () => {
+      await closeDb();
+      logger.info("shutdown complete");
+      process.exit(0);
+    });
+    setTimeout(() => {
+      logger.error("forced shutdown after timeout");
+      process.exit(1);
+    }, 10_000);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT",  () => shutdown("SIGINT"));
 }

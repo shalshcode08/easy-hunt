@@ -1,4 +1,12 @@
 import request from "supertest";
+
+// Mock Clerk middleware — no real Clerk keys in test env
+jest.mock("@/middleware/auth", () => ({
+  clerkAuth: (_req: any, _res: any, next: any) => next(),
+  requireAuth: (_req: any, _res: any, next: any) => next(),
+  requireAdminKey: (_req: any, _res: any, next: any) => next(),
+}));
+
 import { app } from "@/index";
 
 describe("GET /howareyou", () => {
