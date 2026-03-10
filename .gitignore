@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds
+.next/
+out/
+dist/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# bun
+bun.lockb
+
+# misc
+.DS_Store
+*.log
+.turbo/

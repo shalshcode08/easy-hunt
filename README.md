@@ -1,1 +1,1 @@
-project name is EASYHUNT
+EASYHUNT

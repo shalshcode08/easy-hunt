@@ -1,25 +1,26 @@
 # JobHunter — Production-Grade Job Aggregator Web App
 
 ## Context
+
 A unified job board that scrapes LinkedIn, Naukri, and Indeed every few hours and presents all listings in one clean dashboard. User can filter, save, and track applications. Clicking a job redirects to the original site to apply. Saves the user from juggling 3 separate portals daily.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 15 (App Router) + TypeScript + Tailwind CSS + shadcn/ui |
-| Backend | Bun + TypeScript + Express |
-| Scraping | Playwright + playwright-extra + stealth plugin |
-| Database | CockroachDB Serverless (free tier — 5GB, excellent uptime) |
-| ORM | Drizzle ORM (pg-core dialect, postgres.js driver — CockroachDB compatible) |
-| Queue | BullMQ + Upstash Redis (free tier) |
-| Auth | Clerk |
-| Logging | Pino |
-| Validation | Zod |
-| Frontend hosting | Vercel (free) |
-| Backend hosting | Railway (free tier) |
+| Layer            | Technology                                                                 |
+| ---------------- | -------------------------------------------------------------------------- |
+| Frontend         | Next.js 15 (App Router) + TypeScript + Tailwind CSS + shadcn/ui            |
+| Backend          | Bun + TypeScript + Express                                                 |
+| Scraping         | Playwright + playwright-extra + stealth plugin                             |
+| Database         | CockroachDB Serverless (free tier — 5GB, excellent uptime)                 |
+| ORM              | Drizzle ORM (pg-core dialect, postgres.js driver — CockroachDB compatible) |
+| Queue            | BullMQ + Upstash Redis (free tier)                                         |
+| Auth             | Clerk                                                                      |
+| Logging          | Pino                                                                       |
+| Validation       | Zod                                                                        |
+| Frontend hosting | Vercel (free)                                                              |
+| Backend hosting  | Railway (free tier)                                                        |
 
 ---
 
@@ -182,14 +183,14 @@ POST /api/scrape/trigger
 ```ts
 // base.ts
 abstract class BaseScraper {
-  abstract source: 'linkedin' | 'naukri' | 'indeed'
-  abstract scrape(query: ScrapeQuery): Promise<RawJob[]>
+  abstract source: "linkedin" | "naukri" | "indeed";
+  abstract scrape(query: ScrapeQuery): Promise<RawJob[]>;
 
   // Handles browser page lifecycle, retries (3x exponential backoff), logging
-  protected async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T>
+  protected async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T>;
 
   // Human-like random delay between page actions
-  protected randomDelay(min = 800, max = 2500): Promise<void>
+  protected randomDelay(min = 800, max = 2500): Promise<void>;
 }
 
 // ScrapeQuery = { role: string; location: string; limit: number }
@@ -199,11 +200,13 @@ abstract class BaseScraper {
 **Stealth:** `playwright-extra` + `puppeteer-extra-plugin-stealth` applied to every browser launch.
 
 **Browser Pool (`lib/browser.ts`):**
+
 - Single shared Chromium instance across all scrapes (not per-request)
 - Max 3 concurrent pages via semaphore
 - Auto-restart if browser crashes (health checked before each page acquisition)
 
 **Deduplication (`lib/dedup.ts`):**
+
 - Upsert into `jobs` using `ON CONFLICT (url) DO UPDATE SET scraped_at = now()`
 - Returns count of new vs updated jobs for logging
 
@@ -213,18 +216,30 @@ abstract class BaseScraper {
 
 ```ts
 // queues.ts
-const scraperQueue = new Queue('scraper', { connection: redisConnection })
+const scraperQueue = new Queue("scraper", { connection: redisConnection });
 
 // scheduler.ts — called once on app startup
-scraperQueue.add('linkedin', { role: 'software engineer', location: 'india' }, {
-  repeat: { pattern: '0 */3 * * *' }  // every 3 hours
-})
-scraperQueue.add('naukri',   { role: 'software engineer', location: 'india' }, {
-  repeat: { pattern: '30 */3 * * *' } // offset by 30min to avoid simultaneous load
-})
-scraperQueue.add('indeed',   { role: 'software engineer', location: 'india' }, {
-  repeat: { pattern: '0 1-22/3 * * *' }
-})
+scraperQueue.add(
+  "linkedin",
+  { role: "software engineer", location: "india" },
+  {
+    repeat: { pattern: "0 */3 * * *" }, // every 3 hours
+  },
+);
+scraperQueue.add(
+  "naukri",
+  { role: "software engineer", location: "india" },
+  {
+    repeat: { pattern: "30 */3 * * *" }, // offset by 30min to avoid simultaneous load
+  },
+);
+scraperQueue.add(
+  "indeed",
+  { role: "software engineer", location: "india" },
+  {
+    repeat: { pattern: "0 1-22/3 * * *" },
+  },
+);
 
 // workers.ts
 // Worker picks up job name ('linkedin'|'naukri'|'indeed')
@@ -238,19 +253,19 @@ scraperQueue.add('indeed',   { role: 'software engineer', location: 'india' }, {
 
 ```ts
 // middleware/auth.ts — Express middleware
-import { clerkClient } from '@clerk/express'
+import { clerkClient } from "@clerk/express";
 
 export const requireAuth = async (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '')
-  if (!token) return res.status(401).json({ error: 'Unauthorized' })
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
   try {
-    const payload = await clerkClient.verifyToken(token)
-    req.clerkId = payload.sub      // attach to request
-    next()
+    const payload = await clerkClient.verifyToken(token);
+    req.clerkId = payload.sub; // attach to request
+    next();
   } catch {
-    res.status(401).json({ error: 'Invalid token' })
+    res.status(401).json({ error: "Invalid token" });
   }
-}
+};
 ```
 
 Frontend: `lib/api.ts` axios instance attaches `await getToken()` from `useAuth()` to every request header.
@@ -259,18 +274,18 @@ Frontend: `lib/api.ts` axios instance attaches `await getToken()` from `useAuth(
 
 ## Key Production Patterns
 
-| Concern | Solution |
-|---|---|
-| Env validation | `env.ts` Zod schema — process exits immediately if any var missing |
-| Structured logging | Pino — logs include `req_id`, `method`, `path`, `duration_ms`, `status` |
-| Rate limiting | `express-rate-limit` — 60 req/min per `clerk_id` on all /api routes |
-| DB connection | `postgres.js` driver → CockroachDB Serverless (SSL required, pool via driver config) |
-| Graceful shutdown | SIGTERM: drain BullMQ workers → close browser → close DB → exit |
-| Error handler | `errorHandler.ts` middleware returns `{ error: string, code: string }` |
-| Request validation | Zod schemas on all route inputs via `validate.ts` middleware |
-| CORS | Explicit allowlist: Vercel frontend domain only |
-| Retry logic | 3 retries with 1s/2s/4s backoff in `BaseScraper.withPage` |
-| Security headers | `helmet` middleware on all routes |
+| Concern            | Solution                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| Env validation     | `env.ts` Zod schema — process exits immediately if any var missing                   |
+| Structured logging | Pino — logs include `req_id`, `method`, `path`, `duration_ms`, `status`              |
+| Rate limiting      | `express-rate-limit` — 60 req/min per `clerk_id` on all /api routes                  |
+| DB connection      | `postgres.js` driver → CockroachDB Serverless (SSL required, pool via driver config) |
+| Graceful shutdown  | SIGTERM: drain BullMQ workers → close browser → close DB → exit                      |
+| Error handler      | `errorHandler.ts` middleware returns `{ error: string, code: string }`               |
+| Request validation | Zod schemas on all route inputs via `validate.ts` middleware                         |
+| CORS               | Explicit allowlist: Vercel frontend domain only                                      |
+| Retry logic        | 3 retries with 1s/2s/4s backoff in `BaseScraper.withPage`                            |
+| Security headers   | `helmet` middleware on all routes                                                    |
 
 ---
 
@@ -298,6 +313,7 @@ CLERK_SECRET_KEY=        # For Next.js middleware
 ## Packages
 
 **Backend:**
+
 ```
 dependencies: express, @clerk/express, drizzle-orm, postgres,
               bullmq, @upstash/redis, playwright-extra,
@@ -308,6 +324,7 @@ devDependencies: typescript, @types/express, @types/node, drizzle-kit, bun-types
 ```
 
 **Frontend:**
+
 ```
 dependencies: next, react, react-dom, @clerk/nextjs, @tanstack/react-query,
               axios, tailwindcss, shadcn/ui components, lucide-react,
@@ -321,11 +338,13 @@ devDependencies: typescript, @types/node, @types/react
 ## Deployment
 
 **Frontend → Vercel**
+
 - `next build` — automatic via Vercel
 - Set env vars in Vercel dashboard
 - `next.config.ts` → `NEXT_PUBLIC_API_URL` points to Railway backend
 
 **Backend → Railway**
+
 ```dockerfile
 FROM oven/bun:1-alpine
 WORKDIR /app
@@ -336,6 +355,7 @@ COPY drizzle.config.ts ./
 EXPOSE 3000
 CMD ["bun", "src/index.ts"]
 ```
+
 - Railway health check: `GET /health`
 - Run DB migrations on deploy: `bun drizzle-kit migrate` as a Railway deploy command
 - Note: CockroachDB supports PostgreSQL wire protocol — Drizzle `pg-core` dialect works natively. Use `postgres.js` driver with `ssl: 'verify-full'` in the connection config.
