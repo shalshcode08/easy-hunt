@@ -12,7 +12,6 @@ import { registerRoutes } from "@/routes";
 
 export const app = express();
 
-// ── Global middleware ─────────────────────────────────────────────────────────
 app.use(httpLogger);
 app.use(helmet());
 app.use(clerkAuth);
@@ -21,13 +20,10 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Routes ────────────────────────────────────────────────────────────────────
 registerRoutes(app);
 
-// ── Global error handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
 
-// ── Server bootstrap ──────────────────────────────────────────────────────────
 if (require.main === module) {
   const server = app.listen(env.PORT, () => {
     logger.info(`app-api running on http://localhost:${env.PORT}`);
@@ -47,5 +43,5 @@ if (require.main === module) {
   };
 
   process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT",  () => shutdown("SIGINT"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }

@@ -15,7 +15,7 @@ export const logger = pino({
   }),
 });
 
-export const createHttpLogger = ({ verbose = false }: { verbose?: boolean } = {}) =>
+const createHttpLogger = ({ verbose = false }: { verbose?: boolean } = {}) =>
   pinoHttp({
     logger,
     customLogLevel(_req, res) {
