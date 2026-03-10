@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "cc2d67da-d46c-43df-9e32-ae6d15b2c35f",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "values": [
@@ -22,68 +20,37 @@
       "schema": "public"
     },
     {
-      "values": [
-        "linkedin",
-        "naukri",
-        "indeed"
-      ],
+      "values": ["linkedin", "naukri", "indeed"],
       "name": "job_source",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "full_time",
-        "part_time",
-        "contract",
-        "internship",
-        "freelance",
-        "temporary"
-      ],
+      "values": ["full_time", "part_time", "contract", "internship", "freelance", "temporary"],
       "name": "job_type",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "saved",
-        "applied",
-        "interviewing",
-        "offered",
-        "rejected",
-        "withdrawn"
-      ],
+      "values": ["saved", "applied", "interviewing", "offered", "rejected", "withdrawn"],
       "name": "saved_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "success",
-        "failed",
-        "partial",
-        "skipped"
-      ],
+      "values": ["success", "failed", "partial", "skipped"],
       "name": "scrape_status",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "scheduled",
-        "manual",
-        "backfill"
-      ],
+      "values": ["scheduled", "manual", "backfill"],
       "name": "scrape_trigger",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "onsite",
-        "remote",
-        "hybrid"
-      ],
+      "values": ["onsite", "remote", "hybrid"],
       "name": "work_mode",
       "entityType": "enums",
       "schema": "public"
@@ -1928,14 +1895,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "saved_job_id"
-      ],
+      "columns": ["saved_job_id"],
       "schemaTo": "public",
       "tableTo": "saved_jobs",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "saved_job_status_history_saved_job_id_saved_jobs_id_fkey",
@@ -1945,14 +1908,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "job_id"
-      ],
+      "columns": ["job_id"],
       "schemaTo": "public",
       "tableTo": "jobs",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "saved_jobs_job_id_jobs_id_fkey",
@@ -1961,9 +1920,7 @@
       "table": "saved_jobs"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "jobs_pkey",
       "schema": "public",
@@ -1971,9 +1928,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "saved_job_status_history_pkey",
       "schema": "public",
@@ -1981,9 +1936,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "saved_jobs_pkey",
       "schema": "public",
@@ -1991,9 +1944,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "scrape_logs_pkey",
       "schema": "public",
@@ -2001,9 +1952,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "scrape_queries_pkey",
       "schema": "public",
@@ -2011,9 +1960,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -2022,10 +1969,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "clerk_id",
-        "job_id"
-      ],
+      "columns": ["clerk_id", "job_id"],
       "nullsNotDistinct": false,
       "name": "uq_saved_jobs_clerk_job",
       "entityType": "uniques",
@@ -2034,11 +1978,7 @@
     },
     {
       "nameExplicit": true,
-      "columns": [
-        "source",
-        "role",
-        "location"
-      ],
+      "columns": ["source", "role", "location"],
       "nullsNotDistinct": false,
       "name": "uq_scrape_queries",
       "entityType": "uniques",
