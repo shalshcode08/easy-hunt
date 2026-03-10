@@ -12,8 +12,6 @@ app.get("/howareyou", (_req, res) => {
     status: "alive",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
-    memory: process.memoryUsage(),
-    node: process.version,
   });
 });
 

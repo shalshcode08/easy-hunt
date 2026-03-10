@@ -48,8 +48,5 @@ export const createHttpLogger = ({ verbose = false }: { verbose?: boolean } = {}
         }),
   });
 
-// Default: clean one-line logs — used globally in index.ts
 export const httpLogger = createHttpLogger();
-
-// Verbose: full req/res — use on specific routes when debugging
 export const httpLoggerVerbose = createHttpLogger({ verbose: true });
