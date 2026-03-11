@@ -59,8 +59,40 @@
   }
 }
 
-/* EasyHunt dark theme — always dark, no light mode */
+/* ── Light theme (default) ── */
 :root {
+  --background:            #f7f7f5;
+  --foreground:            #1a1a1a;
+  --card:                  #ffffff;
+  --card-foreground:       #1a1a1a;
+  --popover:               #ffffff;
+  --popover-foreground:    #1a1a1a;
+  --primary:               #59c77a;
+  --primary-foreground:    #ffffff;
+  --secondary:             #f0f0ee;
+  --secondary-foreground:  #1a1a1a;
+  --muted:                 #f0f0ee;
+  --muted-foreground:      rgba(26,26,26,0.5);
+  --accent:                rgba(89,199,122,0.1);
+  --accent-foreground:     #2d9e52;
+  --destructive:           #e5534b;
+  --border:                rgba(0,0,0,0.08);
+  --input:                 rgba(0,0,0,0.06);
+  --ring:                  #59c77a;
+  --radius:                1.125rem;
+
+  --sidebar:                       #efefed;
+  --sidebar-foreground:            #1a1a1a;
+  --sidebar-primary:               #59c77a;
+  --sidebar-primary-foreground:    #ffffff;
+  --sidebar-accent:                rgba(89,199,122,0.1);
+  --sidebar-accent-foreground:     #2d9e52;
+  --sidebar-border:                rgba(0,0,0,0.07);
+  --sidebar-ring:                  #59c77a;
+}
+
+/* ── Dark theme ── */
+.dark {
   --background:            #0c0c0c;
   --foreground:            #ececee;
   --card:                  #191919;
@@ -79,9 +111,7 @@
   --border:                rgba(255,255,255,0.07);
   --input:                 rgba(255,255,255,0.07);
   --ring:                  #59c77a;
-  --radius:                1.125rem;
 
-  /* Sidebar */
   --sidebar:                       #141414;
   --sidebar-foreground:            #ececee;
   --sidebar-primary:               #59c77a;

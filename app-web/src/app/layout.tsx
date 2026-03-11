@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -24,9 +26,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={cn("dark", dmSans.variable, instrumentSerif.variable)}>
-        <body className="font-sans antialiased">{children}</body>
+    <ClerkProvider appearance={{ baseTheme: dark }}>
+      <html lang="en" className={cn(dmSans.variable, instrumentSerif.variable)} suppressHydrationWarning>
+        <body className="font-sans antialiased">
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </body>
       </html>
     </ClerkProvider>
   );
