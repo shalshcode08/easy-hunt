@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetail } from "@/components/jobs/JobDetail";
 import { MOCK_JOBS, type MockJob } from "@/components/jobs/mock";
 
-export default function FeedPage() {
+function FeedContent() {
   const [selectedJob, setSelectedJob] = useState<MockJob | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const searchParams = useSearchParams();
@@ -43,7 +43,7 @@ export default function FeedPage() {
         </div>
 
         {/* Job list */}
-        <div className="flex-1 px-4 lg:px-6 pb-8 pb-safe">
+        <div className="flex-1 px-4 lg:px-6 pb-8">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-sm font-medium text-foreground">No jobs found</p>
@@ -76,5 +76,13 @@ export default function FeedPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense>
+      <FeedContent />
+    </Suspense>
   );
 }

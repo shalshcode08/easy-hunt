@@ -103,7 +103,7 @@ export function TopBar() {
                 height={12}
                 className={cn(
                   "rounded-sm object-contain transition-opacity",
-                  connectedIds.includes(p.id) ? "opacity-100" : "opacity-40",
+                  connectedIds.includes(p.id as "linkedin" | "naukri" | "indeed") ? "opacity-100" : "opacity-40",
                 )}
               />
             ))}
@@ -126,7 +126,7 @@ export function TopBar() {
             {/* Platform list */}
             <div className="p-2 flex flex-col gap-1">
               {PLATFORMS.map((platform) => {
-                const connected = connectedIds.includes(platform.id);
+                const connected = connectedIds.includes(platform.id as PlatformId);
                 return (
                   <div
                     key={platform.id}
