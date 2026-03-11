@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Rss, Bookmark, KanbanSquare, X, Menu } from "lucide-react";
+import { Rss, Bookmark, KanbanSquare, X, Menu, Plug } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { usePlatforms } from "@/contexts/PlatformContext";
 
 const navLinks = [
   { href: "/feed",    label: "Feed",    icon: Rss },
@@ -124,27 +125,40 @@ function NavLink({ href, label, Icon, onClick }: {
 }
 
 function FilterSection() {
+  const { connectedIds } = usePlatforms();
+  const connectedSources = sources.filter(({ id }) => connectedIds.includes(id as "linkedin" | "naukri" | "indeed"));
+
   return (
     <>
       {/* Sources */}
       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 mb-3">
         Sources
       </p>
-      <div className="flex flex-col gap-2.5">
-        {sources.map(({ id, label, color }) => (
-          <label key={id} className="flex items-center gap-2.5 cursor-pointer group">
-            <Checkbox
-              id={id}
-              defaultChecked
-              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-            />
-            <span className={cn("w-2 h-2 rounded-full shrink-0", color)} />
-            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-              {label}
-            </span>
-          </label>
-        ))}
-      </div>
+
+      {connectedSources.length === 0 ? (
+        <div className="flex items-start gap-2 py-2 px-2.5 rounded-[10px] bg-muted/50 border border-border">
+          <Plug className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-muted-foreground/50 leading-snug">
+            Connect a platform from the top bar to filter by source
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {connectedSources.map(({ id, label, color }) => (
+            <label key={id} className="flex items-center gap-2.5 cursor-pointer group">
+              <Checkbox
+                id={id}
+                defaultChecked
+                className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <span className={cn("w-2 h-2 rounded-full shrink-0", color)} />
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                {label}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
 
       <Separator className="my-4 bg-border" />
 
