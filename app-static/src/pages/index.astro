@@ -31,6 +31,7 @@ const jsonLd = JSON.stringify({
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -68,20 +69,24 @@ const jsonLd = JSON.stringify({
 
     /* ── NAV ── */
     nav.top {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    height: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(14px) saturate(180%);
-    border-bottom: 1px solid var(--border);
-    width: 100%;
-    gap: 50%;
-    padding: 0 30px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(14px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      width: 100%;
+      max-width: 1060px;
+      padding: 0 clamp(16px, 4vw, 48px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .nav-logo {
@@ -114,7 +119,21 @@ const jsonLd = JSON.stringify({
       flex-direction: column;
       gap: clamp(64px, 10vw, 96px);
       align-items: center;
+      position: relative;
     }
+
+    /* large mint bloom at the top, behind h1 */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 56px; left: 50%; transform: translateX(-50%);
+      width: min(800px, 100vw); height: 500px;
+      background: radial-gradient(ellipse at 50% 20%, rgba(89,199,122,0.08) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero-left, .hero-right { position: relative; z-index: 1; }
 
     .hero-left {
       display: flex;
@@ -199,49 +218,114 @@ const jsonLd = JSON.stringify({
       animation: fadeUp .7s ease .15s both;
     }
 
-    .float-card {
-      position: relative;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 24px;
-      width: 100%;
-      max-width: 440px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
-      transition: transform 0.3s ease;
+    /* ambient glow behind the card stack */
+    .hero-right::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(480px, 100%); height: 300px;
+      background: radial-gradient(ellipse, rgba(89,199,122,0.13) 0%, rgba(107,158,255,0.07) 50%, transparent 75%);
+      pointer-events: none;
+      z-index: 0;
     }
 
-    .float-card:nth-child(1) { z-index: 3; }
-    .float-card:nth-child(2) { z-index: 2; opacity: 0.85; transform: scale(0.95); margin-top: -72px; }
-    .float-card:nth-child(3) { z-index: 1; opacity: 0.6; transform: scale(0.9); margin-top: -72px; }
+    /* fade-out at the bottom so cards bleed into the page */
+    .hero-right::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 0;
+      height: 100px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      pointer-events: none;
+      z-index: 10;
+    }
 
-    .float-card:nth-child(1):hover { transform: translateY(-4px); }
+    .float-card {
+      position: relative;
+      z-index: 3;
+      /* gradient border via background-clip trick */
+      background:
+        linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+        linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03)) border-box;
+      border: 1px solid transparent;
+      border-radius: var(--r);
+      padding: 20px 22px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow:
+        0 4px 6px rgba(0,0,0,0.3),
+        0 20px 48px rgba(0,0,0,0.55);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .float-card:nth-child(1) { z-index: 5; }
+    .float-card:nth-child(2) {
+      z-index: 4; opacity: 0.82;
+      transform: scale(0.95);
+      margin-top: -68px;
+    }
+    .float-card:nth-child(3) {
+      z-index: 3; opacity: 0.52;
+      transform: scale(0.9);
+      margin-top: -68px;
+    }
+
+    .float-card:nth-child(1):hover { transform: translateY(-5px); box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(89,199,122,0.15); }
     .float-card:nth-child(2):hover { transform: scale(0.95) translateY(-4px); }
-    .float-card:nth-child(3):hover { transform: scale(0.9) translateY(-4px); }
+    .float-card:nth-child(3):hover { transform: scale(0.9) translateY(-3px); }
+
+    /* thin top-edge highlight on the front card */
+    .float-card:nth-child(1)::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 16px; right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      border-radius: 1px;
+    }
 
     .fc-row {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .fc-title { font-size: 0.9rem; font-weight: 500; color: var(--text); }
 
     .fc-badge {
       font-size: 0.58rem; font-weight: 600;
       letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 3px 8px; border-radius: 6px;
+      padding: 3px 9px; border-radius: 6px;
     }
     .fc-badge.li { background: rgba(107,158,255,0.12); color: var(--blue); }
     .fc-badge.nk { background: rgba(255,159,104,0.12); color: var(--peach); }
     .fc-badge.in { background: var(--mint-dim); color: var(--mint); }
 
+    .fc-divider {
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+      margin: 12px 0;
+    }
+
+    .fc-bottom {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
     .fc-meta { font-size: 0.7rem; color: var(--text-3); }
 
-    .fc-save {
-      margin-top: 12px;
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.7rem; color: var(--mint);
+    .fc-action {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.68rem; color: var(--mint);
+      background: var(--mint-dim);
+      border: 1px solid var(--mint-border);
+      padding: 3px 10px; border-radius: 80px;
     }
-    .fc-save svg { width: 12px; height: 12px; }
+    .fc-action svg { width: 10px; height: 10px; }
+
+    .fc-salary {
+      font-size: 0.72rem; font-weight: 500;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
 
     /* ── SECTION HEADER ── */
     .sec-hd { text-align: center; margin-bottom: 52px; }
@@ -485,7 +569,7 @@ const jsonLd = JSON.stringify({
       content: '';
       position: absolute;
       top: -40%; left: 50%; transform: translateX(-50%);
-      width: 600px; height: 280px;
+      width: min(600px, 100%); height: 280px;
       background: radial-gradient(ellipse, rgba(89,199,122,0.09) 0%, transparent 70%);
       pointer-events: none;
     }
@@ -519,46 +603,70 @@ const jsonLd = JSON.stringify({
     }
 
     /* ── RESPONSIVE ── */
+
+    /* Tablet */
     @media (max-width: 860px) {
-      /* Hero */
-      .hero {
-        padding: 110px 0 60px;
-        gap: 48px;
-      }
-      h1 { font-size: clamp(2.8rem, 8vw, 3.8rem); }
+      .hero { padding: 110px 0 60px; gap: 40px; }
+      h1 { font-size: clamp(2.6rem, 7vw, 3.6rem); }
       .hero-desc { max-width: 100%; }
 
-      /* Floating cards */
-      .float-card { max-width: 320px; padding: 20px; }
+      /* Cards: shrink slightly, keep stack visible */
+      .float-card { max-width: 360px; padding: 16px 18px; }
       .float-card:nth-child(2) { margin-top: -60px; }
       .float-card:nth-child(3) { margin-top: -60px; }
 
-      /* Features */
-      .f-grid { grid-template-columns: 1fr 1fr; }
+      .f-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
 
-      /* Sources */
-      .sources-top { grid-template-columns: 1fr; gap: 16px; }
+      .sources-top {
+        grid-template-columns: 1fr;
+        padding: 28px 24px 20px;
+        gap: 12px;
+      }
       .sources-total { text-align: left; }
       .sources-platforms { grid-template-columns: 1fr; }
-      .sp-item { border-right: none; border-bottom: 1px solid var(--border); }
+      .sp-item {
+        padding: 20px 24px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
       .sp-item:last-child { border-bottom: none; }
 
-      /* How */
-      .how-grid { grid-template-columns: 1fr; }
-
-      /* CTA */
-      .cta-card { padding: 48px 24px; }
-
-      /* Footer */
-      footer { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .how-grid { grid-template-columns: 1fr; gap: 40px; }
     }
 
-    @media (max-width: 540px) {
-      .f-grid { grid-template-columns: 1fr; }
+    /* Large mobile */
+    @media (max-width: 640px) {
+      .f-grid { grid-template-columns: 1fr; gap: 10px; }
+
+      /* Show cards but make them full-width within wrap */
+      .hero-right { width: 100%; }
+      .float-card {
+        max-width: 100%;
+        width: 100%;
+      }
+      .float-card:nth-child(2) { margin-top: -56px; }
+      .float-card:nth-child(3) { margin-top: -56px; }
+
+      .how-grid { gap: 32px; }
+    }
+
+    /* Small mobile */
+    @media (max-width: 480px) {
+      .hero { padding: 96px 0 48px; gap: 32px; }
+      h1 { font-size: clamp(2.4rem, 10vw, 3rem); }
+
+      /* Hide card stack on very small screens to avoid clutter */
       .hero-right { display: none; }
-      h1 { font-size: clamp(2.6rem, 10vw, 3.4rem); }
-      .hero-btns { flex-direction: column; }
+
+      .hero-btns { flex-direction: column; align-items: stretch; }
       .btn-fill, .btn-ghost { text-align: center; }
+
+      .sources-top { padding: 20px 16px 16px; }
+      .sp-item { padding: 16px 18px; }
+
+      .acc-btn { font-size: 0.9rem; }
+
+      footer { flex-direction: column; align-items: flex-start; gap: 12px; }
     }
   </style>
 </head>
@@ -566,8 +674,10 @@ const jsonLd = JSON.stringify({
 
   <!-- NAV -->
   <nav class="top">
-    <a href="/" class="nav-logo">Easy<em>Hunt</em></a>
-    <a href="#" class="nav-cta">Get started</a>
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">Easy<em>Hunt</em></a>
+      <a href="#" class="nav-cta">Get started</a>
+    </div>
   </nav>
 
   <div class="wrap">
@@ -594,11 +704,14 @@ const jsonLd = JSON.stringify({
             <span class="fc-title">Senior Backend Engineer</span>
             <span class="fc-badge li">LinkedIn</span>
           </div>
-          <div class="fc-meta">Razorpay · Bengaluru · ₹32–48 LPA</div>
-          <div class="fc-save">
-            <!-- Lucide: bookmark -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-            Saved
+          <div class="fc-salary">Razorpay · Bengaluru</div>
+          <div class="fc-divider"></div>
+          <div class="fc-bottom">
+            <span class="fc-meta">₹32–48 LPA · 2h ago</span>
+            <span class="fc-action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+              Save
+            </span>
           </div>
         </div>
         <div class="float-card">
@@ -606,14 +719,18 @@ const jsonLd = JSON.stringify({
             <span class="fc-title">Staff SDE — Payments</span>
             <span class="fc-badge nk">Naukri</span>
           </div>
-          <div class="fc-meta">PhonePe · Remote · ₹45–65 LPA</div>
+          <div class="fc-salary">PhonePe · Remote</div>
+          <div class="fc-divider"></div>
+          <div class="fc-bottom">
+            <span class="fc-meta">₹45–65 LPA · 3h ago</span>
+          </div>
         </div>
         <div class="float-card">
           <div class="fc-row">
             <span class="fc-title">Platform Engineer</span>
             <span class="fc-badge in">Indeed</span>
           </div>
-          <div class="fc-meta">Flipkart · Bengaluru · ₹28–42 LPA</div>
+          <div class="fc-salary">Flipkart · Bengaluru</div>
         </div>
       </div>
     </section>
