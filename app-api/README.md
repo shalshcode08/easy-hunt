@@ -13,12 +13,12 @@ bun run dev
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `bun run dev` | Start with hot reload |
-| `bun run test` | Run tests |
-| `bun run db:migrate` | Run DB migrations |
-| `bun run db:studio` | Open Drizzle Studio |
+| Command              | Description           |
+| -------------------- | --------------------- |
+| `bun run dev`        | Start with hot reload |
+| `bun run test`       | Run tests             |
+| `bun run db:migrate` | Run DB migrations     |
+| `bun run db:studio`  | Open Drizzle Studio   |
 
 ## Requirements
 

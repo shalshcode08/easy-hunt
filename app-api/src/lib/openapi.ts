@@ -230,10 +230,7 @@ registry.registerPath({
         .enum(["full_time", "part_time", "contract", "internship", "freelance", "temporary"])
         .optional()
         .openapi({ example: "full_time" }),
-      workMode: z
-        .enum(["onsite", "remote", "hybrid"])
-        .optional()
-        .openapi({ example: "remote" }),
+      workMode: z.enum(["onsite", "remote", "hybrid"]).optional().openapi({ example: "remote" }),
       datePosted: z
         .enum(["24h", "7d", "30d"])
         .optional()
@@ -252,7 +249,10 @@ registry.registerPath({
     422: validationErrorResponse,
     ...authResponses,
   },
-  ...curlSample("GET", "/api/v1/jobs?source=linkedin&workMode=remote&datePosted=7d&page=1&limit=20"),
+  ...curlSample(
+    "GET",
+    "/api/v1/jobs?source=linkedin&workMode=remote&datePosted=7d&page=1&limit=20",
+  ),
 });
 
 registry.registerPath({
@@ -262,7 +262,9 @@ registry.registerPath({
   summary: "Get job by ID",
   security: [{ [BearerAuth.name]: [] }],
   request: {
-    params: z.object({ id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }) }),
+    params: z.object({
+      id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+    }),
   },
   responses: {
     200: {
@@ -313,10 +315,7 @@ registry.registerPath({
       content: {
         "application/json": {
           schema: z.object({
-            jobId: z
-              .string()
-              .uuid()
-              .openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+            jobId: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
           }),
         },
       },
@@ -327,15 +326,14 @@ registry.registerPath({
       description: "Job saved successfully",
       content: { "application/json": { schema: SavedJobSchema } },
     },
-    404: { description: "Job ID does not exist", content: { "application/json": { schema: ErrorResponseSchema } } },
+    404: {
+      description: "Job ID does not exist",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
     422: validationErrorResponse,
     ...authResponses,
   },
-  ...curlSample(
-    "POST",
-    "/api/v1/saved",
-    '{"jobId":"550e8400-e29b-41d4-a716-446655440000"}',
-  ),
+  ...curlSample("POST", "/api/v1/saved", '{"jobId":"550e8400-e29b-41d4-a716-446655440000"}'),
 });
 
 registry.registerPath({
@@ -347,7 +345,9 @@ registry.registerPath({
     "Update status and/or notes. Status changes are recorded in history. Setting status to `applied` auto-sets `appliedAt`.",
   security: [{ [BearerAuth.name]: [] }],
   request: {
-    params: z.object({ id: z.string().uuid().openapi({ example: "660e8400-e29b-41d4-a716-446655440001" }) }),
+    params: z.object({
+      id: z.string().uuid().openapi({ example: "660e8400-e29b-41d4-a716-446655440001" }),
+    }),
     body: {
       content: {
         "application/json": {
@@ -386,7 +386,9 @@ registry.registerPath({
   description: "Soft-deletes the saved job. The underlying job record is unaffected.",
   security: [{ [BearerAuth.name]: [] }],
   request: {
-    params: z.object({ id: z.string().uuid().openapi({ example: "660e8400-e29b-41d4-a716-446655440001" }) }),
+    params: z.object({
+      id: z.string().uuid().openapi({ example: "660e8400-e29b-41d4-a716-446655440001" }),
+    }),
   },
   responses: {
     204: { description: "Deleted successfully — no content" },

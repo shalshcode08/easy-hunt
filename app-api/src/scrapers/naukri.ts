@@ -27,7 +27,9 @@ export class NaukriScraper extends BaseScraper {
       while (jobs.length < query.limit) {
         const pageUrl = pageNum === 1 ? url : `${url}-${pageNum}`;
         await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 30_000 });
-        await page.waitForSelector(".srp-jobtuple-wrapper, article.jobTuple", { timeout: 15_000 }).catch(() => {});
+        await page
+          .waitForSelector(".srp-jobtuple-wrapper, article.jobTuple", { timeout: 15_000 })
+          .catch(() => {});
 
         const cards = await page.$$(".srp-jobtuple-wrapper, article.jobTuple");
         if (cards.length === 0) break;
@@ -35,12 +37,24 @@ export class NaukriScraper extends BaseScraper {
         for (const card of cards) {
           if (jobs.length >= query.limit) break;
           try {
-            const title = await card.$eval("a.title", (el) => el.textContent?.trim()).catch(() => null);
-            const company = await card.$eval("a.comp-name, .comp-name", (el) => el.textContent?.trim()).catch(() => null);
-            const href = await card.$eval("a.title", (el) => (el as HTMLAnchorElement).href).catch(() => null);
-            const location = await card.$eval(".locWdth, .location", (el) => el.textContent?.trim()).catch(() => null);
-            const salaryRaw = await card.$eval(".salary, .sal", (el) => el.textContent?.trim()).catch(() => null);
-            const experience = await card.$eval(".expwdth, .experience", (el) => el.textContent?.trim()).catch(() => null);
+            const title = await card
+              .$eval("a.title", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const company = await card
+              .$eval("a.comp-name, .comp-name", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const href = await card
+              .$eval("a.title", (el) => (el as HTMLAnchorElement).href)
+              .catch(() => null);
+            const location = await card
+              .$eval(".locWdth, .location", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const salaryRaw = await card
+              .$eval(".salary, .sal", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const experience = await card
+              .$eval(".expwdth, .experience", (el) => el.textContent?.trim())
+              .catch(() => null);
 
             if (!title || !company || !href) continue;
 

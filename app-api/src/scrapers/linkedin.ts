@@ -44,11 +44,21 @@ export class LinkedInScraper extends BaseScraper {
         for (const card of cards) {
           if (jobs.length >= query.limit) break;
           try {
-            const title = await card.$eval(".base-search-card__title", (el) => el.textContent?.trim()).catch(() => null);
-            const company = await card.$eval(".base-search-card__subtitle", (el) => el.textContent?.trim()).catch(() => null);
-            const location = await card.$eval(".job-search-card__location", (el) => el.textContent?.trim()).catch(() => null);
-            const href = await card.$eval("a.base-card__full-link", (el) => (el as HTMLAnchorElement).href).catch(() => null);
-            const dateText = await card.$eval("time", (el) => el.getAttribute("datetime") ?? el.textContent).catch(() => null);
+            const title = await card
+              .$eval(".base-search-card__title", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const company = await card
+              .$eval(".base-search-card__subtitle", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const location = await card
+              .$eval(".job-search-card__location", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const href = await card
+              .$eval("a.base-card__full-link", (el) => (el as HTMLAnchorElement).href)
+              .catch(() => null);
+            const dateText = await card
+              .$eval("time", (el) => el.getAttribute("datetime") ?? el.textContent)
+              .catch(() => null);
 
             if (!title || !company || !href) continue;
 
@@ -59,7 +69,13 @@ export class LinkedInScraper extends BaseScraper {
               if (isNaN(postedAt.getTime())) postedAt = parseRelativeDate(dateText);
             }
 
-            jobs.push({ title, company, location: location ?? query.location, url: cleanUrl, postedAt });
+            jobs.push({
+              title,
+              company,
+              location: location ?? query.location,
+              url: cleanUrl,
+              postedAt,
+            });
           } catch {
             continue;
           }

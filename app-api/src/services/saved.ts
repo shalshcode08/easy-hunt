@@ -44,7 +44,10 @@ export const SavedService = {
 
   saveJob: async (clerkId: string, body: SaveJobBody) => {
     return db.transaction(async (tx) => {
-      const [jobExists] = await tx.select({ id: jobs.id }).from(jobs).where(eq(jobs.id, body.jobId));
+      const [jobExists] = await tx
+        .select({ id: jobs.id })
+        .from(jobs)
+        .where(eq(jobs.id, body.jobId));
       if (!jobExists) throw createError("Job not found", 404, "NOT_FOUND");
 
       const [saved] = await tx.insert(savedJobs).values({ clerkId, jobId: body.jobId }).returning();

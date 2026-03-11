@@ -67,10 +67,7 @@ describe("GET /api/v1/saved", () => {
 
   it("passes clerkId to service", async () => {
     await request(app).get("/api/v1/saved");
-    expect(SavedService.getSavedJobs).toHaveBeenCalledWith(
-      "user_test123",
-      expect.any(Object),
-    );
+    expect(SavedService.getSavedJobs).toHaveBeenCalledWith("user_test123", expect.any(Object));
   });
 
   it("passes status filter to service", async () => {
@@ -138,20 +135,16 @@ describe("PATCH /api/v1/saved/:id", () => {
   });
 
   it("returns 200 with updated saved job", async () => {
-    const res = await request(app)
-      .patch(`/api/v1/saved/${savedJobId}`)
-      .send({ status: "applied" });
+    const res = await request(app).patch(`/api/v1/saved/${savedJobId}`).send({ status: "applied" });
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("applied");
   });
 
   it("calls service with clerkId, id and body", async () => {
     await request(app).patch(`/api/v1/saved/${savedJobId}`).send({ status: "applied" });
-    expect(SavedService.updateSavedJob).toHaveBeenCalledWith(
-      "user_test123",
-      savedJobId,
-      { status: "applied" },
-    );
+    expect(SavedService.updateSavedJob).toHaveBeenCalledWith("user_test123", savedJobId, {
+      status: "applied",
+    });
   });
 
   it("allows updating notes only", async () => {
@@ -166,9 +159,7 @@ describe("PATCH /api/v1/saved/:id", () => {
   });
 
   it("returns 422 for invalid status value", async () => {
-    const res = await request(app)
-      .patch(`/api/v1/saved/${savedJobId}`)
-      .send({ status: "ghosted" });
+    const res = await request(app).patch(`/api/v1/saved/${savedJobId}`).send({ status: "ghosted" });
     expect(res.status).toBe(422);
     expect(res.body.code).toBe("VALIDATION_ERROR");
   });
@@ -178,9 +169,7 @@ describe("PATCH /api/v1/saved/:id", () => {
     (SavedService.updateSavedJob as jest.Mock).mockRejectedValue(
       createError("Saved job not found", 404, "NOT_FOUND"),
     );
-    const res = await request(app)
-      .patch(`/api/v1/saved/${savedJobId}`)
-      .send({ status: "applied" });
+    const res = await request(app).patch(`/api/v1/saved/${savedJobId}`).send({ status: "applied" });
     expect(res.status).toBe(404);
     expect(res.body.code).toBe("NOT_FOUND");
   });

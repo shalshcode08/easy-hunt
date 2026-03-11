@@ -5,7 +5,13 @@ import { logger } from "@/lib/logger";
 const BASE_URL = "https://in.indeed.com/jobs";
 
 function buildUrl(role: string, location: string, start = 0): string {
-  const params = new URLSearchParams({ q: role, l: location, sort: "date", fromage: "7", start: String(start) });
+  const params = new URLSearchParams({
+    q: role,
+    l: location,
+    sort: "date",
+    fromage: "7",
+    start: String(start),
+  });
   return `${BASE_URL}?${params}`;
 }
 
@@ -31,7 +37,9 @@ export class IndeedScraper extends BaseScraper {
           waitUntil: "domcontentloaded",
           timeout: 30_000,
         });
-        await page.waitForSelector(".job_seen_beacon, .tapItem", { timeout: 15_000 }).catch(() => {});
+        await page
+          .waitForSelector(".job_seen_beacon, .tapItem", { timeout: 15_000 })
+          .catch(() => {});
 
         const cards = await page.$$(".job_seen_beacon, .tapItem");
         if (cards.length === 0) break;
@@ -39,14 +47,32 @@ export class IndeedScraper extends BaseScraper {
         for (const card of cards) {
           if (jobs.length >= query.limit) break;
           try {
-            const title = await card.$eval("[data-testid='jobTitle'] span, .jobTitle span", (el) => el.textContent?.trim()).catch(() => null);
-            const company = await card.$eval("[data-testid='company-name'], .companyName", (el) => el.textContent?.trim()).catch(() => null);
-            const location = await card.$eval("[data-testid='text-location'], .companyLocation", (el) => el.textContent?.trim()).catch(() => null);
-            const href = await card.$eval("a[id^='job_']", (el) => (el as HTMLAnchorElement).href).catch(
-              () => card.$eval("a.jcs-JobTitle", (el) => (el as HTMLAnchorElement).href).catch(() => null)
-            );
-            const salary = await card.$eval("[data-testid='attribute_snippet_testid']", (el) => el.textContent?.trim()).catch(() => null);
-            const dateText = await card.$eval("[data-testid='myJobsStateDate'] span, .date", (el) => el.textContent?.trim()).catch(() => null);
+            const title = await card
+              .$eval("[data-testid='jobTitle'] span, .jobTitle span", (el) =>
+                el.textContent?.trim(),
+              )
+              .catch(() => null);
+            const company = await card
+              .$eval("[data-testid='company-name'], .companyName", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const location = await card
+              .$eval("[data-testid='text-location'], .companyLocation", (el) =>
+                el.textContent?.trim(),
+              )
+              .catch(() => null);
+            const href = await card
+              .$eval("a[id^='job_']", (el) => (el as HTMLAnchorElement).href)
+              .catch(() =>
+                card
+                  .$eval("a.jcs-JobTitle", (el) => (el as HTMLAnchorElement).href)
+                  .catch(() => null),
+              );
+            const salary = await card
+              .$eval("[data-testid='attribute_snippet_testid']", (el) => el.textContent?.trim())
+              .catch(() => null);
+            const dateText = await card
+              .$eval("[data-testid='myJobsStateDate'] span, .date", (el) => el.textContent?.trim())
+              .catch(() => null);
 
             if (!title || !company || !href) continue;
 
