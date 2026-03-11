@@ -1,54 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  useDroppable,
-  useDraggable,
-  type DragStartEvent,
-  type DragEndEvent,
+  DndContext, DragOverlay, PointerSensor,
+  useSensor, useSensors, useDroppable, useDraggable,
+  type DragStartEvent, type DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  MapPin,
-  GripVertical,
-  MoreHorizontal,
-  Trash2,
-  MoveRight,
-  ChevronDown,
-  StickyNote,
-} from "lucide-react";
+import { MapPin, GripVertical, MoreHorizontal, Trash2, MoveRight, ChevronDown, StickyNote } from "lucide-react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
+import { useSavedJobs, useSavedJobsMutations } from "@/hooks/useSavedJobs";
 import { MOCK_JOBS } from "@/components/jobs/mock";
+import type { SavedJobWithJob } from "@/lib/types";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 type PipelineStatus = "applied" | "interviewing" | "offered" | "rejected";
 
-interface TrackerJob {
-  id: string;
-  jobId: string;
-  status: PipelineStatus;
-  appliedAt: string;
-  notes: string;
-}
-
-const MOCK_TRACKER: TrackerJob[] = [
-  { id: "t1", jobId: "1", status: "interviewing", appliedAt: "2d ago",  notes: "Round 1 done. Round 2 scheduled for next week." },
-  { id: "t2", jobId: "2", status: "applied",      appliedAt: "3d ago",  notes: "" },
-  { id: "t3", jobId: "4", status: "applied",      appliedAt: "4d ago",  notes: "Applied via referral from Aditya." },
-  { id: "t6", jobId: "5", status: "offered",      appliedAt: "10d ago", notes: "Offer: ₹32 LPA + ESOPs. Deadline this Friday." },
-  { id: "t7", jobId: "7", status: "rejected",     appliedAt: "12d ago", notes: "Rejected post final round. Feedback: system design." },
-];
+const TRACKER_STATUSES = new Set<string>(["applied", "interviewing", "offered", "rejected"]);
 
 const COLUMNS: {
   status: PipelineStatus;
@@ -85,23 +56,24 @@ function KanbanCard({
   onRemove,
   onUpdateNotes,
 }: {
-  item: TrackerJob;
+  item: SavedJobWithJob;
   overlay?: boolean;
   onMove?: (id: string, status: PipelineStatus) => void;
   onRemove?: (id: string) => void;
   onUpdateNotes?: (id: string, notes: string) => void;
 }) {
-  const job = MOCK_JOBS.find((j) => j.id === item.jobId);
-  if (!job) return null;
-
+  const { savedJob, job } = item;
   const [editingNotes, setEditingNotes] = useState(false);
-  const [notesValue, setNotesValue] = useState(item.notes);
+  const [notesValue, setNotesValue] = useState(savedJob.notes ?? "");
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: savedJob.id });
+  const wm = WORK_MODE_CONFIG[job.workMode ?? "onsite"];
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id });
-  const wm = WORK_MODE_CONFIG[job.workMode];
+  useEffect(() => {
+    if (!editingNotes) setNotesValue(savedJob.notes ?? "");
+  }, [savedJob.notes, editingNotes]);
 
   function commitNotes() {
-    onUpdateNotes?.(item.id, notesValue);
+    onUpdateNotes?.(savedJob.id, notesValue);
     setEditingNotes(false);
   }
 
@@ -114,82 +86,55 @@ function KanbanCard({
         isDragging ? "opacity-30" : "hover:border-border/80 hover:shadow-sm transition-all duration-150",
       )}
     >
-      {/* Row 1: drag handle + company + source + actions */}
       <div className="flex items-center gap-2">
-        <button
-          {...listeners}
-          {...attributes}
-          className="text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors cursor-grab active:cursor-grabbing shrink-0"
-        >
+        <button {...listeners} {...attributes} className="text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors cursor-grab active:cursor-grabbing shrink-0">
           <GripVertical className="w-3.5 h-3.5" />
         </button>
         <div className="w-5 h-5 rounded-[5px] bg-muted border border-border flex items-center justify-center shrink-0 text-[9px] font-bold text-foreground">
           {job.company[0]}
         </div>
         <span className="text-[11px] text-muted-foreground/60 truncate flex-1">{job.company}</span>
-        <Image
-          src={SOURCE_LOGOS[job.source]}
-          alt={job.source}
-          width={12}
-          height={12}
-          className="rounded-[3px] object-contain opacity-40 shrink-0"
-        />
+        <Image src={SOURCE_LOGOS[job.source]} alt={job.source} width={12} height={12} className="rounded-[3px] object-contain opacity-40 shrink-0" />
+
         {!overlay && onMove && onRemove && (
           <DropdownMenu>
             <DropdownMenuTrigger className="w-5 h-5 rounded-[5px] flex items-center justify-center text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted transition-colors shrink-0 outline-none">
               <MoreHorizontal className="w-3 h-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom" className="w-44">
-              {COLUMNS.filter((c) => c.status !== item.status).map((col) => (
-                <DropdownMenuItem
-                  key={col.status}
-                  onClick={() => onMove(item.id, col.status)}
-                  className="gap-2 cursor-pointer"
-                >
+              {COLUMNS.filter((c) => c.status !== savedJob.status).map((col) => (
+                <DropdownMenuItem key={col.status} onClick={() => onMove(savedJob.id, col.status)} className="gap-2 cursor-pointer">
                   <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", col.dot)} />
                   <MoveRight className="w-3 h-3 text-muted-foreground/40 shrink-0" />
                   <span className={cn("text-sm font-medium", col.color)}>{col.label}</span>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onRemove(item.id)}
-                variant="destructive"
-                className="gap-2 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="text-sm font-medium">Remove</span>
+              <DropdownMenuItem onClick={() => onRemove(savedJob.id)} variant="destructive" className="gap-2 cursor-pointer">
+                <Trash2 className="w-3.5 h-3.5" /><span className="text-sm font-medium">Remove</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
 
-      {/* Title */}
-      <p className="text-sm font-semibold text-foreground leading-snug px-0.5">
-        {job.title}
-      </p>
+      <p className="text-sm font-semibold text-foreground leading-snug px-0.5">{job.title}</p>
 
-      {/* Location + work mode */}
       <div className="flex items-center gap-1.5 px-0.5">
         <MapPin className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-        <span className="text-[11px] text-muted-foreground/50 truncate flex-1">{job.city}</span>
-        <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0", wm.bg, wm.color)}>
-          {wm.label}
-        </span>
+        <span className="text-[11px] text-muted-foreground/50 truncate flex-1">{job.city ?? "—"}</span>
+        <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0", wm.bg, wm.color)}>{wm.label}</span>
       </div>
 
-      {/* Salary + applied date */}
       <div className="flex items-center justify-between px-0.5 pt-0.5 border-t border-border/40">
-        {job.salary ? (
-          <span className="text-[10px] font-semibold text-muted-foreground/60">{job.salary}</span>
+        {job.salaryRaw ? (
+          <span className="text-[10px] font-semibold text-muted-foreground/60">{job.salaryRaw}</span>
         ) : (
           <span className="text-[10px] text-muted-foreground/25">No salary listed</span>
         )}
-        <span className="text-[10px] text-muted-foreground/30">Applied {item.appliedAt}</span>
+        <span className="text-[10px] text-muted-foreground/30">Applied {timeAgo(savedJob.appliedAt ?? savedJob.createdAt)}</span>
       </div>
 
-      {/* Notes section — hidden in drag overlay */}
       {!overlay && (
         <div className="px-0.5">
           {editingNotes ? (
@@ -203,21 +148,14 @@ function KanbanCard({
               autoFocus
             />
           ) : notesValue ? (
-            <button
-              onClick={() => setEditingNotes(true)}
-              className="text-left w-full group/notes"
-            >
+            <button onClick={() => setEditingNotes(true)} className="text-left w-full group/notes">
               <p className="text-[11px] text-muted-foreground/60 line-clamp-2 bg-muted/40 rounded-[6px] px-1.5 py-1 group-hover/notes:bg-muted/70 transition-colors">
                 {notesValue}
               </p>
             </button>
           ) : (
-            <button
-              onClick={() => setEditingNotes(true)}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
-            >
-              <StickyNote className="w-3 h-3" />
-              Add note
+            <button onClick={() => setEditingNotes(true)} className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors">
+              <StickyNote className="w-3 h-3" />Add note
             </button>
           )}
         </div>
@@ -228,15 +166,10 @@ function KanbanCard({
 
 // ── Droppable Column ───────────────────────────────────────────────────────────
 function KanbanColumn({
-  column,
-  items,
-  isOver,
-  onMove,
-  onRemove,
-  onUpdateNotes,
+  column, items, isOver, onMove, onRemove, onUpdateNotes,
 }: {
   column: (typeof COLUMNS)[number];
-  items: TrackerJob[];
+  items: SavedJobWithJob[];
   isOver: boolean;
   onMove: (id: string, status: PipelineStatus) => void;
   onRemove: (id: string) => void;
@@ -253,30 +186,20 @@ function KanbanColumn({
           {items.length}
         </span>
       </div>
-
       <div
         ref={setNodeRef}
         className={cn(
           "flex flex-col gap-2 p-2 rounded-b-[14px] border overflow-y-auto transition-colors duration-150",
           "min-h-[120px] max-h-[calc(100dvh-260px)]",
           column.border,
-          isOver ? `${column.bg} border-dashed` : "bg-muted/10"
+          isOver ? `${column.bg} border-dashed` : "bg-muted/10",
         )}
       >
         {items.map((item) => (
-          <KanbanCard
-            key={item.id}
-            item={item}
-            onMove={onMove}
-            onRemove={onRemove}
-            onUpdateNotes={onUpdateNotes}
-          />
+          <KanbanCard key={item.savedJob.id} item={item} onMove={onMove} onRemove={onRemove} onUpdateNotes={onUpdateNotes} />
         ))}
         {items.length === 0 && (
-          <div className={cn(
-            "flex-1 flex items-center justify-center rounded-[10px] min-h-[80px]",
-            isOver ? "opacity-100" : "opacity-40"
-          )}>
+          <div className={cn("flex-1 flex items-center justify-center rounded-[10px] min-h-[80px]", isOver ? "opacity-100" : "opacity-40")}>
             <p className={cn("text-xs font-medium", column.color)}>Drop here</p>
           </div>
         )}
@@ -286,18 +209,13 @@ function KanbanColumn({
 }
 
 // ── Mobile List Row ────────────────────────────────────────────────────────────
-function MobileListRow({
-  item,
-  onMove,
-  onRemove,
-}: {
-  item: TrackerJob;
+function MobileListRow({ item, onMove, onRemove }: {
+  item: SavedJobWithJob;
   onMove: (id: string, status: PipelineStatus) => void;
   onRemove: (id: string) => void;
 }) {
-  const job = MOCK_JOBS.find((j) => j.id === item.jobId);
-  if (!job) return null;
-  const wm = WORK_MODE_CONFIG[job.workMode];
+  const { savedJob, job } = item;
+  const wm = WORK_MODE_CONFIG[job.workMode ?? "onsite"];
 
   return (
     <div className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
@@ -312,26 +230,22 @@ function MobileListRow({
           <span className="text-muted-foreground/30 text-[10px]">·</span>
           <span className={cn("text-[10px] font-medium px-1 py-0.5 rounded-full", wm.bg, wm.color)}>{wm.label}</span>
         </div>
-        {item.notes && (
-          <p className="text-[11px] text-muted-foreground/50 mt-1 line-clamp-1">{item.notes}</p>
-        )}
+        {savedJob.notes && <p className="text-[11px] text-muted-foreground/50 mt-1 line-clamp-1">{savedJob.notes}</p>}
       </div>
-
       <DropdownMenu>
         <DropdownMenuTrigger className="w-7 h-7 rounded-[8px] flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors shrink-0 outline-none mt-0.5">
           <MoreHorizontal className="w-3.5 h-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          {COLUMNS.filter((c) => c.status !== item.status).map((col) => (
-            <DropdownMenuItem key={col.status} onClick={() => onMove(item.id, col.status)} className="gap-2 cursor-pointer">
+          {COLUMNS.filter((c) => c.status !== savedJob.status).map((col) => (
+            <DropdownMenuItem key={col.status} onClick={() => onMove(savedJob.id, col.status)} className="gap-2 cursor-pointer">
               <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", col.dot)} />
               <span className={cn("text-sm font-medium", col.color)}>{col.label}</span>
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onRemove(item.id)} variant="destructive" className="gap-2 cursor-pointer">
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="text-sm font-medium">Remove</span>
+          <DropdownMenuItem onClick={() => onRemove(savedJob.id)} variant="destructive" className="gap-2 cursor-pointer">
+            <Trash2 className="w-3.5 h-3.5" /><span className="text-sm font-medium">Remove</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -341,40 +255,30 @@ function MobileListRow({
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 export default function TrackerPage() {
-  const [items, setItems] = useState<TrackerJob[]>(MOCK_TRACKER);
+  const { data, isLoading } = useSavedJobs();
+  const mutations = useSavedJobsMutations();
+
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [mobileCollapsed, setMobileCollapsed] = useState<Set<PipelineStatus>>(new Set(["rejected"]));
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const activeItem = items.find((i) => i.id === activeId) ?? null;
+  const items = (data ?? []).filter(({ savedJob }) => TRACKER_STATUSES.has(savedJob.status));
+  const activeItem = items.find(({ savedJob }) => savedJob.id === activeId) ?? null;
 
   function onDragStart(e: DragStartEvent) { setActiveId(String(e.active.id)); }
   function onDragOver(e: { over: { id: string } | null }) { setOverId(e.over ? String(e.over.id) : null); }
-  function onDragEnd(e: DragEndEvent) {
+  async function onDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     setActiveId(null);
     setOverId(null);
     if (!over) return;
     const targetStatus = String(over.id) as PipelineStatus;
     if (!COLUMNS.find((c) => c.status === targetStatus)) return;
-    setItems((prev) => prev.map((item) =>
-      item.id === String(active.id) ? { ...item, status: targetStatus } : item
-    ));
+    await mutations.updateStatus(String(active.id), targetStatus);
   }
 
-  function moveItem(id: string, status: PipelineStatus) {
-    setItems((prev) => prev.map((item) => item.id === id ? { ...item, status } : item));
-  }
-  function removeItem(id: string) {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-  }
-  function updateNotes(id: string, notes: string) {
-    setItems((prev) => prev.map((item) => item.id === id ? { ...item, notes } : item));
-  }
   function toggleMobileCollapse(status: PipelineStatus) {
     setMobileCollapsed((prev) => {
       const next = new Set(prev);
@@ -383,19 +287,33 @@ export default function TrackerPage() {
     });
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="px-4 lg:px-6 pt-5 pb-4 border-b border-border shrink-0">
+          <div className="h-7 w-24 bg-muted rounded-full animate-pulse" />
+          <div className="h-3 w-56 bg-muted rounded-full animate-pulse mt-2" />
+          <div className="flex gap-2 mt-3">
+            {[1,2,3,4].map((i) => <div key={i} className="h-7 w-24 bg-muted rounded-[10px] animate-pulse" />)}
+          </div>
+        </div>
+        <div className="hidden md:flex gap-3 p-4 lg:p-6">
+          {[1,2,3,4].map((i) => <div key={i} className="w-[260px] h-64 rounded-[14px] bg-muted animate-pulse shrink-0" />)}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
-      {/* Header */}
       <div className="px-4 lg:px-6 pt-5 pb-4 border-b border-border shrink-0">
         <h1 className="font-serif text-2xl text-foreground">Tracker</h1>
         <p className="text-xs text-muted-foreground/50 mt-0.5">
           Manage your active applications · drag cards or use the menu to update status
         </p>
-
-        {/* Pipeline stats */}
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           {COLUMNS.map((col) => {
-            const count = items.filter((i) => i.status === col.status).length;
+            const count = items.filter(({ savedJob }) => savedJob.status === col.status).length;
             return (
               <div key={col.status} className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] border", col.bg, col.border)}>
                 <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", col.dot)} />
@@ -408,24 +326,19 @@ export default function TrackerPage() {
         </div>
       </div>
 
-      {/* ── Desktop kanban ── */}
+      {/* Desktop kanban */}
       <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto">
-        <DndContext
-          sensors={sensors}
-          onDragStart={onDragStart}
-          onDragOver={onDragOver as never}
-          onDragEnd={onDragEnd}
-        >
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragOver={onDragOver as never} onDragEnd={onDragEnd}>
           <div className="flex gap-3 p-4 lg:p-6 w-max">
             {COLUMNS.map((col) => (
               <KanbanColumn
                 key={col.status}
                 column={col}
-                items={items.filter((i) => i.status === col.status)}
+                items={items.filter(({ savedJob }) => savedJob.status === col.status)}
                 isOver={overId === col.status}
-                onMove={moveItem}
-                onRemove={removeItem}
-                onUpdateNotes={updateNotes}
+                onMove={(id, status) => mutations.updateStatus(id, status)}
+                onRemove={(id) => mutations.remove(id)}
+                onUpdateNotes={(id, notes) => mutations.updateNotes(id, notes)}
               />
             ))}
           </div>
@@ -435,11 +348,11 @@ export default function TrackerPage() {
         </DndContext>
       </div>
 
-      {/* ── Mobile list ── */}
+      {/* Mobile list */}
       <div className="md:hidden flex-1 overflow-y-auto">
         <div className="flex flex-col gap-3 px-4 py-4">
           {COLUMNS.map((col) => {
-            const colItems = items.filter((i) => i.status === col.status);
+            const colItems = items.filter(({ savedJob }) => savedJob.status === col.status);
             if (colItems.length === 0) return null;
             const isCollapsed = mobileCollapsed.has(col.status);
             return (
@@ -450,15 +363,18 @@ export default function TrackerPage() {
                 >
                   <span className={cn("w-2 h-2 rounded-full shrink-0", col.dot)} />
                   <span className={cn("text-xs font-semibold flex-1 text-left", col.color)}>{col.label}</span>
-                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", col.bg, col.border, col.color)}>
-                    {colItems.length}
-                  </span>
+                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", col.bg, col.border, col.color)}>{colItems.length}</span>
                   <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/50 transition-transform", isCollapsed && "-rotate-90")} />
                 </button>
                 {!isCollapsed && (
                   <div className="divide-y divide-border">
                     {colItems.map((item) => (
-                      <MobileListRow key={item.id} item={item} onMove={moveItem} onRemove={removeItem} />
+                      <MobileListRow
+                        key={item.savedJob.id}
+                        item={item}
+                        onMove={(id, status) => mutations.updateStatus(id, status)}
+                        onRemove={(id) => mutations.remove(id)}
+                      />
                     ))}
                   </div>
                 )}
