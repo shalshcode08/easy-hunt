@@ -7,4 +7,7 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
+  webAnalytics: {
+    enabled: true,
+  },
 });
