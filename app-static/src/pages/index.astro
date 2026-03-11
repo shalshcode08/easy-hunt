@@ -1,17 +1,60 @@
 ---
 const title = "EasyHunt — Every Tech Job in India, One Feed";
 const description = "EasyHunt aggregates LinkedIn, Naukri, and Indeed into one unified, filterable job feed for Indian software engineers.";
-const url = "https://easyhunt.in";
-const jsonLd = JSON.stringify({
+const siteUrl = "https://easyhunt.space";
+const ogImage = `${siteUrl}/og.png`;
+
+const jsonLdApp = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: "EasyHunt",
   description,
-  url: "https://easyhunt.in",
+  url: siteUrl,
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
   audience: { "@type": "Audience", audienceType: "Software Engineers, Tech Professionals" },
+});
+
+const jsonLdOrg = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "EasyHunt",
+  url: siteUrl,
+  logo: `${siteUrl}/favicon.svg`,
+  description,
+});
+
+const jsonLdFaq = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How does EasyHunt work?",
+      acceptedAnswer: { "@type": "Answer", text: "EasyHunt scrapes LinkedIn, Naukri, and Indeed every 4 hours and presents all listings in one unified, deduplicated feed. You can filter by location, salary, work mode, and source." }
+    },
+    {
+      "@type": "Question",
+      name: "Is EasyHunt free to use?",
+      acceptedAnswer: { "@type": "Answer", text: "Yes. EasyHunt is completely free with no premium tiers, no ads, no sponsored results, and no sign-up required." }
+    },
+    {
+      "@type": "Question",
+      name: "Which job boards does EasyHunt aggregate?",
+      acceptedAnswer: { "@type": "Answer", text: "EasyHunt aggregates jobs from LinkedIn, Naukri, and Indeed — the three largest job platforms in India, covering 14,000+ new listings every day." }
+    },
+    {
+      "@type": "Question",
+      name: "How often are job listings updated?",
+      acceptedAnswer: { "@type": "Answer", text: "Job listings are refreshed every 4 hours, ensuring you see the freshest opportunities before they fill up." }
+    },
+    {
+      "@type": "Question",
+      name: "Can I track my job applications on EasyHunt?",
+      acceptedAnswer: { "@type": "Answer", text: "Yes. EasyHunt includes a built-in application tracker. Save jobs and move them through stages — Saved, Applied, Interviewing, Offered — so you always know where you stand." }
+    },
+  ],
 });
 ---
 <!DOCTYPE html>
@@ -21,21 +64,45 @@ const jsonLd = JSON.stringify({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href={url} />
+  <meta name="keywords" content="job search India, tech jobs India, software engineer jobs India, LinkedIn Naukri Indeed aggregator, IT jobs India, developer jobs, unified job feed, job tracker" />
+  <meta name="author" content="EasyHunt" />
+  <meta name="theme-color" content="#0c0c0c" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href={siteUrl} />
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:url" content={url} />
+  <meta property="og:url" content={siteUrl} />
   <meta property="og:site_name" content="EasyHunt" />
+  <meta property="og:locale" content="en_IN" />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="EasyHunt — Every Tech Job in India, One Feed" />
+
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+  <meta name="twitter:image:alt" content="EasyHunt — Every Tech Job in India, One Feed" />
+
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- Fonts: preconnect first, then load with swap -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <script type="application/ld+json" set:html={jsonLd} />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json" set:html={jsonLdApp} />
+  <script type="application/ld+json" set:html={jsonLdOrg} />
+  <script type="application/ld+json" set:html={jsonLdFaq} />
   <style>
     :root {
       --bg:          #0c0c0c;
@@ -585,8 +652,6 @@ const jsonLd = JSON.stringify({
     footer {
       border-top: 1px solid var(--border);
       padding: 28px 0;
-      display: flex; align-items: center; justify-content: center;
-      flex-wrap: wrap; gap: 12px;
     }
     .ft-left { font-size: 0.75rem; color: var(--text-3); }
     .ft-links { display: flex; gap: 18px; list-style: none; }
@@ -666,7 +731,7 @@ const jsonLd = JSON.stringify({
 
       .acc-btn { font-size: 0.9rem; }
 
-      footer { flex-direction: column; align-items: flex-start; gap: 12px; }
+      footer .wrap { flex-direction: column; align-items: flex-start !important; gap: 12px; }
     }
   </style>
 </head>
@@ -680,10 +745,10 @@ const jsonLd = JSON.stringify({
     </div>
   </nav>
 
-  <div class="wrap">
+  <main class="wrap">
 
     <!-- HERO -->
-    <section class="hero">
+    <section class="hero" aria-label="Hero">
       <div class="hero-left">
         <div class="hero-badge">
           <!-- Lucide: sparkles -->
@@ -736,10 +801,10 @@ const jsonLd = JSON.stringify({
     </section>
 
     <!-- FEATURES -->
-    <section class="features" id="features">
+    <section class="features" id="features" aria-labelledby="features-heading">
       <div class="sec-hd">
         <span class="sec-tag">Features</span>
-        <h2>Built for engineers<br />who value <em>their time</em></h2>
+        <h2 id="features-heading">Built for engineers<br />who value <em>their time</em></h2>
         <p class="sec-sub">No noise. Every feature exists to get you to the right job, faster.</p>
       </div>
 
@@ -796,12 +861,12 @@ const jsonLd = JSON.stringify({
     </section>
 
     <!-- SOURCES -->
-    <section class="sources" id="sources">
+    <section class="sources" id="sources" aria-labelledby="sources-heading">
       <div class="sources-card">
         <div class="sources-top">
           <div>
             <span class="sec-tag">Where we look</span>
-            <h2>Every platform.<br /><em>One place.</em></h2>
+            <h2 id="sources-heading">Every platform.<br /><em>One place.</em></h2>
           </div>
           <div class="sources-total">
             <div class="sources-total-num">14<span>k+</span></div>
@@ -835,11 +900,11 @@ const jsonLd = JSON.stringify({
     </section>
 
     <!-- HOW IT WORKS / ACCORDION -->
-    <section class="how" id="how">
+    <section class="how" id="how" aria-labelledby="how-heading">
       <div class="how-grid">
         <div>
           <span class="sec-tag">How it works</span>
-          <h2>Four steps to<br />your <em>next role</em></h2>
+          <h2 id="how-heading">Four steps to<br />your <em>next role</em></h2>
           <p class="sec-sub" style="margin-inline:0;">From discovery to offer — a focused, manageable process.</p>
 
           <div class="acc-list">
@@ -925,11 +990,14 @@ const jsonLd = JSON.stringify({
       </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap" style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;">
       <span class="ft-left">© 2025 EasyHunt</span>
-    </footer>
-  </div>
+    </div>
+  </footer>
 
 
 
