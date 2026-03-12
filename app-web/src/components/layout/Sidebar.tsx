@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { Rss, Bookmark, KanbanSquare, X, Menu, Plug } from "lucide-react";
+import { Rss, Bookmark, KanbanSquare, X, Menu, Plug, LogOut } from "lucide-react";
+import { useUser, useClerk } from "@clerk/nextjs";
+import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ThemeToggle } from "./ThemeToggle";
@@ -231,15 +233,44 @@ function FilterSection() {
 }
 
 function UserArea() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const name = user?.fullName ?? user?.firstName ?? user?.username ?? "User";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const initials = name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <div className="flex items-center gap-2.5 px-2">
-      <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
-        <span className="text-[10px] font-semibold text-primary">EH</span>
+    <div className="flex items-center gap-2.5 px-2 min-w-0 flex-1">
+      {user?.imageUrl ? (
+        <Image
+          src={user.imageUrl}
+          alt={name}
+          width={28}
+          height={28}
+          className="rounded-full shrink-0 object-cover"
+        />
+      ) : (
+        <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+          <span className="text-[10px] font-semibold text-primary">{initials}</span>
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-foreground truncate">{name}</p>
+        <p className="text-[10px] text-muted-foreground/50 truncate">{email}</p>
       </div>
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-foreground truncate">Dev Mode</p>
-        <p className="text-[10px] text-muted-foreground/50 truncate">Admin</p>
-      </div>
+      <button
+        onClick={() => signOut({ redirectUrl: "/" })}
+        title="Sign out"
+        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-[4px] text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+      >
+        <LogOut className="w-3.5 h-3.5" />
+      </button>
     </div>
   );
 }

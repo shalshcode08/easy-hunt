@@ -1,7 +1,7 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, notExists } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { platformConnections, users } from "@/db/schema";
+import { platformConnections, users, userJobFeed, jobs } from "@/db/schema";
 import { encrypt, decrypt } from "@/lib/crypto";
 import {
   createLoginSession,
@@ -158,19 +158,35 @@ export const PlatformService = {
   },
 
   async disconnect(clerkId: string, platform: JobSource): Promise<void> {
+    // 1. Remove platform connection record
     await db
-      .update(platformConnections)
-      .set({
-        status: "error",
-        encryptedCookies: null,
-        cookiesIv: null,
-        cookiesTag: null,
-        updatedAt: new Date(),
-      })
+      .delete(platformConnections)
       .where(
         and(
           eq(platformConnections.clerkId, clerkId),
           eq(platformConnections.platform, platform),
+        ),
+      );
+
+    // 2. Remove this user's feed entries for that platform
+    await db
+      .delete(userJobFeed)
+      .where(
+        and(
+          eq(userJobFeed.clerkId, clerkId),
+          eq(userJobFeed.platform, platform as typeof userJobFeed.platform._.data),
+        ),
+      );
+
+    // 3. Delete orphaned jobs — jobs of that platform no longer in any user's feed
+    await db
+      .delete(jobs)
+      .where(
+        and(
+          eq(jobs.source, platform as typeof jobs.source._.data),
+          notExists(
+            db.select({ id: userJobFeed.id }).from(userJobFeed).where(eq(userJobFeed.jobId, jobs.id)),
+          ),
         ),
       );
   },
