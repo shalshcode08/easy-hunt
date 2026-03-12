@@ -1,10 +1,11 @@
-import { and, count, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, lte, or, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { jobs, userJobFeed } from "@/db/schema";
 import { createError } from "@/middleware/errorHandler";
 
 export const getJobsQuerySchema = z.object({
+  q: z.string().max(200).optional(),
   source: z.enum(["linkedin", "naukri", "indeed"]).optional(),
   city: z.string().optional(),
   jobType: z
@@ -28,7 +29,7 @@ const datePostedMs: Record<string, number> = {
 
 export const JobsService = {
   getJobs: async (query: GetJobsQuery, clerkId: string) => {
-    const { source, city, jobType, workMode, datePosted, salaryMin, salaryMax, page, limit } =
+    const { q, source, city, jobType, workMode, datePosted, salaryMin, salaryMax, page, limit } =
       query;
 
     // Fetch job IDs from this user's feed
@@ -49,10 +50,21 @@ export const JobsService = {
 
     const feedJobIds = feedRows.map((r) => r.jobId);
 
+    // Full-text + partial match search across title, company, and description
+    const qTrimmed = q?.trim();
+    const searchCond = qTrimmed
+      ? or(
+          ilike(jobs.titleNormalized, `%${qTrimmed.toLowerCase()}%`),
+          ilike(jobs.companyNormalized, `%${qTrimmed.toLowerCase()}%`),
+          sql`(${jobs.description} IS NOT NULL AND to_tsvector('english', ${jobs.description}) @@ websearch_to_tsquery('english', ${qTrimmed}))`,
+        )
+      : undefined;
+
     const where = and(
       eq(jobs.isActive, true),
       eq(jobs.isDeleted, false),
       inArray(jobs.id, feedJobIds),
+      searchCond,
       city ? eq(jobs.city, city) : undefined,
       jobType ? eq(jobs.jobType, jobType) : undefined,
       workMode ? eq(jobs.workMode, workMode) : undefined,

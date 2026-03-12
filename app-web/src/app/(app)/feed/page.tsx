@@ -1,20 +1,20 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plug, Loader2, X } from "lucide-react";
+import { Plug, Loader2 } from "lucide-react";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetail } from "@/components/jobs/JobDetail";
-import { useJobs } from "@/hooks/useJobs";
+import { useInfiniteJobs } from "@/hooks/useInfiniteJobs";
 import { useSavedJobs, useSavedJobsMutations } from "@/hooks/useSavedJobs";
 import { usePlatforms } from "@/contexts/PlatformContext";
 import type { Job, JobSource, WorkMode } from "@/lib/types";
 
 function JobCardSkeleton() {
   return (
-    <div className="rounded-[14px] border border-border px-4 py-4 flex flex-col gap-3 animate-pulse">
+    <div className="rounded-[10px] border border-border px-4 py-4 flex flex-col gap-3 animate-pulse">
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-[8px] bg-muted shrink-0" />
+        <div className="w-8 h-8 rounded-[6px] bg-muted shrink-0" />
         <div className="h-3.5 bg-muted rounded-full w-28" />
         <div className="ml-auto h-5 bg-muted rounded-full w-16" />
       </div>
@@ -31,41 +31,46 @@ function JobCardSkeleton() {
 function FeedContent() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const searchParams = useSearchParams();
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const { connections, loading: platformsLoading, justConnected, startConnect } = usePlatforms();
 
-  const q        = searchParams.get("q") ?? "";
-  const source   = searchParams.get("source") as JobSource | undefined ?? undefined;
-  const workMode = searchParams.get("workMode") as WorkMode | undefined ?? undefined;
-  const city     = searchParams.get("city") ?? undefined;
+  const q = searchParams.get("q") ?? "";
+  const source = (searchParams.get("source") as JobSource | undefined) ?? undefined;
+  const workMode = (searchParams.get("workMode") as WorkMode | undefined) ?? undefined;
+  const city = searchParams.get("city") ?? undefined;
 
   const hasActiveConnections = connections.some((c) => c.status === "active");
-  // Any connected platform that has never completed a scrape yet
-  const isScrapePending = hasActiveConnections && connections.some((c) => c.status === "active" && c.scrapeCount === 0);
+  const isScrapePending =
+    hasActiveConnections && connections.some((c) => c.status === "active" && c.scrapeCount === 0);
   const showScrapingBanner = justConnected || isScrapePending;
 
-  const { data, isLoading, error, mutate } = useJobs({ source, workMode, city, limit: 50 });
-  const { data: savedData }                = useSavedJobs();
-  const mutations                          = useSavedJobsMutations();
+  const { jobs, total, isLoading, isFetchingMore, hasMore, error, loadMore, mutate } =
+    useInfiniteJobs({ q: q || undefined, source, workMode, city });
+  const { data: savedData } = useSavedJobs();
+  const mutations = useSavedJobsMutations();
 
-  // Poll every 10s while scraping is pending, stop once jobs arrive
+  // Poll every 10s while scraping is pending
   useEffect(() => {
     if (!showScrapingBanner) return;
     const id = setInterval(() => mutate(), 10_000);
     return () => clearInterval(id);
   }, [showScrapingBanner, mutate]);
 
-  const savedJobIds = new Set(savedData?.map((s) => s.savedJob.jobId) ?? []);
-
-  const jobs = (data?.jobs ?? []).filter((job) => {
-    if (!q.trim()) return true;
-    const lq = q.toLowerCase();
-    return (
-      job.title.toLowerCase().includes(lq) ||
-      job.company.toLowerCase().includes(lq) ||
-      (job.city ?? "").toLowerCase().includes(lq) ||
-      (job.skillsRaw ?? []).some((s) => s.toLowerCase().includes(lq))
+  // Infinite scroll: load next page when sentinel enters viewport
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "200px" },
     );
-  });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  const savedJobIds = new Set(savedData?.map((s) => s.savedJob.jobId) ?? []);
 
   function toggleSave(job: Job) {
     const existing = savedData?.find((s) => s.savedJob.jobId === job.id);
@@ -94,7 +99,7 @@ function FeedContent() {
             <p className="text-xs text-destructive/70">Failed to load jobs</p>
           ) : (
             <p className="text-xs text-muted-foreground/50">
-              {jobs.length} {jobs.length === 1 ? "job" : "jobs"} found
+              {total} {total === 1 ? "job" : "jobs"} found
             </p>
           )}
         </div>
@@ -102,7 +107,9 @@ function FeedContent() {
         <div className="flex-1 px-4 lg:px-6 pb-8">
           {isLoading ? (
             <div className="flex flex-col gap-2">
-              {Array.from({ length: 5 }).map((_, i) => <JobCardSkeleton key={i} />)}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <JobCardSkeleton key={i} />
+              ))}
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -115,17 +122,22 @@ function FeedContent() {
             <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
               <Loader2 className="w-6 h-6 text-primary animate-spin" />
               <p className="text-sm text-muted-foreground/60 mt-2">Scraping jobs for you…</p>
-              <p className="text-xs text-muted-foreground/40">Usually takes under a minute. The page will update automatically.</p>
+              <p className="text-xs text-muted-foreground/40">
+                Usually takes under a minute. The page will update automatically.
+              </p>
             </div>
           ) : jobs.length === 0 && !platformsLoading && !hasActiveConnections ? (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Plug className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Connect a platform to get started</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Connect a platform to get started
+                </p>
                 <p className="text-xs text-muted-foreground/50 mt-1 max-w-[260px]">
-                  Link your LinkedIn, Naukri, or Indeed account — we'll fetch jobs personalised to you.
+                  Link your LinkedIn, Naukri, or Indeed account — we'll fetch jobs personalised to
+                  you.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -133,7 +145,7 @@ function FeedContent() {
                   <button
                     key={id}
                     onClick={() => startConnect(id)}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-[8px] bg-muted border border-border hover:border-primary/30 hover:bg-primary/5 transition-colors text-foreground capitalize"
+                    className="text-xs font-semibold px-3 py-1.5 rounded-[6px] bg-muted border border-border hover:border-primary/30 hover:bg-primary/5 transition-colors text-foreground capitalize"
                   >
                     {id}
                   </button>
@@ -143,7 +155,9 @@ function FeedContent() {
           ) : jobs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-sm font-medium text-foreground">No jobs found</p>
-              <p className="text-xs text-muted-foreground/50 mt-1">Try adjusting your filters or search</p>
+              <p className="text-xs text-muted-foreground/50 mt-1">
+                Try adjusting your filters or search
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -157,6 +171,11 @@ function FeedContent() {
                   onSave={() => toggleSave(job)}
                 />
               ))}
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="py-2 flex justify-center">
+                {isFetchingMore && <Loader2 className="w-4 h-4 text-muted-foreground/40 animate-spin" />}
+              </div>
             </div>
           )}
         </div>

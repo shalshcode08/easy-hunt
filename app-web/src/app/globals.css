@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap");
 
 @import "tw-animate-css";
 
@@ -12,28 +12,32 @@
   --font-serif: "Instrument Serif", serif;
   --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --color-bg:          #0c0c0c;
-  --color-bg-2:        #141414;
-  --color-bg-card:     #191919;
-  --color-border:      rgba(255,255,255,0.07);
-  --color-border-h:    rgba(255,255,255,0.14);
-  --color-text:        #ececee;
-  --color-text-2:      rgba(236,236,238,0.55);
-  --color-text-3:      rgba(236,236,238,0.28);
-  --color-mint:        #59c77a;
-  --color-mint-dim:    rgba(89,199,122,0.1);
-  --color-mint-border: rgba(89,199,122,0.22);
-  --color-peach:       #ff9f68;
-  --color-blue:        #6b9eff;
+  --color-bg: #0c0c0c;
+  --color-bg-2: #141414;
+  --color-bg-card: #191919;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-h: rgba(255, 255, 255, 0.14);
+  --color-text: #ececee;
+  --color-text-2: rgba(236, 236, 238, 0.55);
+  --color-text-3: rgba(236, 236, 238, 0.28);
+  --color-mint: #59c77a;
+  --color-mint-dim: rgba(89, 199, 122, 0.1);
+  --color-mint-border: rgba(89, 199, 122, 0.22);
+  --color-peach: #ff9f68;
+  --color-blue: #6b9eff;
 
-  --radius-sm:  14px;
-  --radius-md:  18px;
-  --radius-lg:  24px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
   --radius-pill: 80px;
 }
 
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
   html {
     scroll-behavior: smooth;
@@ -45,15 +49,25 @@
   body {
     background-color: #0c0c0c;
     color: #ececee;
-    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      "DM Sans",
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
     font-weight: 400;
     line-height: 1.6;
     overflow-x: hidden;
     @apply bg-background text-foreground;
   }
 
-  a { color: inherit; text-decoration: none; }
-  button { cursor: pointer; font-family: inherit; }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    cursor: pointer;
+    font-family: inherit;
+  }
   * {
     @apply border-border outline-ring/50;
   }
@@ -61,65 +75,65 @@
 
 /* ── Light theme (default) ── */
 :root {
-  --background:            #f7f7f5;
-  --foreground:            #1a1a1a;
-  --card:                  #ffffff;
-  --card-foreground:       #1a1a1a;
-  --popover:               #ffffff;
-  --popover-foreground:    #1a1a1a;
-  --primary:               #59c77a;
-  --primary-foreground:    #ffffff;
-  --secondary:             #f0f0ee;
-  --secondary-foreground:  #1a1a1a;
-  --muted:                 #f0f0ee;
-  --muted-foreground:      rgba(26,26,26,0.5);
-  --accent:                rgba(89,199,122,0.1);
-  --accent-foreground:     #2d9e52;
-  --destructive:           #e5534b;
-  --border:                rgba(0,0,0,0.08);
-  --input:                 rgba(0,0,0,0.06);
-  --ring:                  #59c77a;
-  --radius:                1.125rem;
+  --background: #f7f7f5;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #59c77a;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0ee;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f0f0ee;
+  --muted-foreground: rgba(26, 26, 26, 0.5);
+  --accent: rgba(89, 199, 122, 0.1);
+  --accent-foreground: #2d9e52;
+  --destructive: #e5534b;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.06);
+  --ring: #59c77a;
+  --radius: 0.75rem;
 
-  --sidebar:                       #efefed;
-  --sidebar-foreground:            #1a1a1a;
-  --sidebar-primary:               #59c77a;
-  --sidebar-primary-foreground:    #ffffff;
-  --sidebar-accent:                rgba(89,199,122,0.1);
-  --sidebar-accent-foreground:     #2d9e52;
-  --sidebar-border:                rgba(0,0,0,0.07);
-  --sidebar-ring:                  #59c77a;
+  --sidebar: #efefed;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #59c77a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(89, 199, 122, 0.1);
+  --sidebar-accent-foreground: #2d9e52;
+  --sidebar-border: rgba(0, 0, 0, 0.07);
+  --sidebar-ring: #59c77a;
 }
 
 /* ── Dark theme ── */
 .dark {
-  --background:            #0c0c0c;
-  --foreground:            #ececee;
-  --card:                  #191919;
-  --card-foreground:       #ececee;
-  --popover:               #141414;
-  --popover-foreground:    #ececee;
-  --primary:               #59c77a;
-  --primary-foreground:    #0c0c0c;
-  --secondary:             #141414;
-  --secondary-foreground:  #ececee;
-  --muted:                 #141414;
-  --muted-foreground:      rgba(236,236,238,0.55);
-  --accent:                rgba(89,199,122,0.1);
-  --accent-foreground:     #59c77a;
-  --destructive:           #ff5f57;
-  --border:                rgba(255,255,255,0.07);
-  --input:                 rgba(255,255,255,0.07);
-  --ring:                  #59c77a;
+  --background: #0c0c0c;
+  --foreground: #ececee;
+  --card: #191919;
+  --card-foreground: #ececee;
+  --popover: #141414;
+  --popover-foreground: #ececee;
+  --primary: #59c77a;
+  --primary-foreground: #0c0c0c;
+  --secondary: #141414;
+  --secondary-foreground: #ececee;
+  --muted: #141414;
+  --muted-foreground: rgba(236, 236, 238, 0.55);
+  --accent: rgba(89, 199, 122, 0.1);
+  --accent-foreground: #59c77a;
+  --destructive: #ff5f57;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.07);
+  --ring: #59c77a;
 
-  --sidebar:                       #141414;
-  --sidebar-foreground:            #ececee;
-  --sidebar-primary:               #59c77a;
-  --sidebar-primary-foreground:    #0c0c0c;
-  --sidebar-accent:                rgba(89,199,122,0.08);
-  --sidebar-accent-foreground:     #59c77a;
-  --sidebar-border:                rgba(255,255,255,0.07);
-  --sidebar-ring:                  #59c77a;
+  --sidebar: #141414;
+  --sidebar-foreground: #ececee;
+  --sidebar-primary: #59c77a;
+  --sidebar-primary-foreground: #0c0c0c;
+  --sidebar-accent: rgba(89, 199, 122, 0.08);
+  --sidebar-accent-foreground: #59c77a;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-ring: #59c77a;
 }
 
 @theme inline {
@@ -159,8 +173,8 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.2);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 1.8);
+  --radius-4xl: calc(var(--radius) * 2);
 }

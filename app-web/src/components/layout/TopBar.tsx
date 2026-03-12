@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Check, Plug, ExternalLink, Search, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  ChevronDown,
+  Check,
+  Plug,
+  ExternalLink,
+  Search,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePlatforms } from "@/contexts/PlatformContext";
@@ -54,12 +62,28 @@ export function TopBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
+  const [inputValue, setInputValue] = useState(query);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  function handleSearch(value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set("q", value);
-    else params.delete("q");
-    router.replace(`?${params.toString()}`, { scroll: false });
+  // Sync input if URL changes externally (e.g. browser back/forward)
+  useEffect(() => {
+    setInputValue(query);
+  }, [query]);
+
+  const handleSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set("q", value);
+      else params.delete("q");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
+
+  function handleInput(value: string) {
+    setInputValue(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => handleSearch(value), 350);
   }
 
   useEffect(() => {
@@ -95,12 +119,12 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-20 h-14 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between gap-3 px-4 lg:px-6 shrink-0">
       {/* Search bar */}
-      <div className="flex-1 flex items-center gap-2 bg-muted border border-border rounded-[10px] px-3 h-8 focus-within:border-primary/40 transition-colors max-w-lg">
+      <div className="flex-1 flex items-center gap-2 bg-muted border border-border rounded-[6px] px-3 h-8 focus-within:border-primary/40 transition-colors max-w-lg">
         <Search className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
         <input
           type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+          value={inputValue}
+          onChange={(e) => handleInput(e.target.value)}
           placeholder="Search jobs, companies, skills…"
           className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
         />
@@ -111,7 +135,7 @@ export function TopBar() {
         <button
           onClick={() => setOpen((v) => !v)}
           className={cn(
-            "flex items-center gap-2 h-8 pl-3 pr-2.5 rounded-[10px] border text-sm font-medium transition-colors",
+            "flex items-center gap-2 h-8 pl-3 pr-2.5 rounded-[6px] border text-sm font-medium transition-colors",
             connectedIds.size > 0
               ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15"
               : expiredIds.size > 0
@@ -146,7 +170,7 @@ export function TopBar() {
 
         {/* Dropdown */}
         {open && (
-          <div className="absolute right-0 top-[calc(100%+6px)] w-[288px] bg-popover border border-border rounded-[14px] shadow-xl overflow-hidden z-50">
+          <div className="absolute right-0 top-[calc(100%+6px)] w-[288px] bg-popover border border-border rounded-[10px] shadow-xl overflow-hidden z-50">
             {/* Header */}
             <div className="px-4 py-3 border-b border-border">
               <p className="text-xs font-semibold text-foreground">Job Platforms</p>
@@ -166,7 +190,7 @@ export function TopBar() {
                   <div
                     key={platform.id}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-[10px] border transition-colors",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-[6px] border transition-colors",
                       isConnected
                         ? `${platform.bg} ${platform.border}`
                         : isExpired
@@ -214,16 +238,18 @@ export function TopBar() {
                       <button
                         onClick={() => handleConnect(platform.id)}
                         disabled={connecting === platform.id}
-                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-[8px] bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors shrink-0"
+                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-[6px] bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors shrink-0"
                       >
-                        <RefreshCw className={cn("w-3 h-3", connecting === platform.id && "animate-spin")} />
+                        <RefreshCw
+                          className={cn("w-3 h-3", connecting === platform.id && "animate-spin")}
+                        />
                         Reconnect
                       </button>
                     ) : (
                       <button
                         onClick={() => handleConnect(platform.id)}
                         disabled={connecting === platform.id}
-                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-[8px] bg-foreground text-background hover:bg-foreground/80 transition-colors shrink-0 disabled:opacity-60"
+                        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-[6px] bg-foreground text-background hover:bg-foreground/80 transition-colors shrink-0 disabled:opacity-60"
                       >
                         {connecting === platform.id ? (
                           <RefreshCw className="w-3 h-3 animate-spin" />

@@ -81,6 +81,7 @@ export async function extractAndTerminate(
 ): Promise<SerializedCookie[]> {
   const client = bb();
   const session = await client.sessions.retrieve(sessionId);
+
   if (session.status !== "RUNNING") {
     throw new Error(`Session ${sessionId} is not running`);
   }

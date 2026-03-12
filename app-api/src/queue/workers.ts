@@ -104,24 +104,17 @@ export const registerWorkers = async (boss: PgBoss): Promise<void> => {
           const newJobs = toNewJobs(rawJobs, platform);
           const { inserted, updated } = await upsertJobs(newJobs);
 
-          // Associate all scraped jobs with every user in the cluster
-          const jobIds = await db
-            .select({ urlHash: userJobFeed.id }) // we need actual job IDs after upsert
-            .from(userJobFeed)
-            .limit(0); // just to get the type, unused
-
-          // Re-fetch inserted job IDs by URL hash
+          // Associate ALL jobs for this platform with every user in the cluster
+          // (includes jobs from previous scrape runs, not just this batch)
           const { jobs: dbJobs } = await import("@/db/schema");
-          const { inArray } = await import("drizzle-orm");
-          const urlHashes = newJobs.map((j) => j.urlHash);
-          const insertedJobs = await db
+          const allPlatformJobs = await db
             .select({ id: dbJobs.id })
             .from(dbJobs)
-            .where(inArray(dbJobs.urlHash, urlHashes));
+            .where(eq(dbJobs.source, platform as NewJob["source"]));
 
-          if (insertedJobs.length > 0) {
+          if (allPlatformJobs.length > 0) {
             const feedRows = clerkIds.flatMap((clerkId) =>
-              insertedJobs.map((j) => ({
+              allPlatformJobs.map((j) => ({
                 clerkId,
                 jobId: j.id,
                 platform: platform as NewJob["source"],

@@ -12,15 +12,15 @@ import { usePlatforms } from "@/contexts/PlatformContext";
 import type { JobSource, WorkMode } from "@/lib/types";
 
 const navLinks = [
-  { href: "/feed",    label: "Feed",    icon: Rss },
-  { href: "/saved",   label: "Saved",   icon: Bookmark },
+  { href: "/feed", label: "Feed", icon: Rss },
+  { href: "/saved", label: "Saved", icon: Bookmark },
   { href: "/tracker", label: "Tracker", icon: KanbanSquare },
 ];
 
 const sources: { id: JobSource; label: string; color: string }[] = [
   { id: "linkedin", label: "LinkedIn", color: "bg-[#6b9eff]" },
-  { id: "naukri",   label: "Naukri",   color: "bg-[#ff9f68]" },
-  { id: "indeed",   label: "Indeed",   color: "bg-[#59c77a]" },
+  { id: "naukri", label: "Naukri", color: "bg-[#ff9f68]" },
+  { id: "indeed", label: "Indeed", color: "bg-[#59c77a]" },
 ];
 
 const workModes: { id: WorkMode; label: string }[] = [
@@ -42,7 +42,7 @@ export function Sidebar() {
           <ThemeToggle />
           <button
             onClick={() => setMobileOpen(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-[10px] text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/[0.06] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-[6px] text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/[0.06] transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -56,17 +56,23 @@ export function Sidebar() {
         />
       )}
 
-      <aside className={cn(
-        "fixed top-0 left-0 h-screen w-[220px] bg-sidebar border-r border-border flex flex-col z-50 transition-transform duration-300",
-        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-      )}>
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-screen w-[220px] bg-sidebar border-r border-border flex flex-col z-50 transition-transform duration-300",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        )}
+      >
         <div className="px-5 h-14 flex items-center justify-between border-b border-border shrink-0">
-          <Link href="/feed" className="font-serif text-xl text-foreground" onClick={() => setMobileOpen(false)}>
+          <Link
+            href="/feed"
+            className="font-serif text-xl text-foreground"
+            onClick={() => setMobileOpen(false)}
+          >
             Easy<em className="italic text-primary not-italic">Hunt</em>
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden w-7 h-7 flex items-center justify-center rounded-[8px] text-muted-foreground hover:text-foreground transition-colors"
+            className="lg:hidden w-7 h-7 flex items-center justify-center rounded-[6px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -74,7 +80,13 @@ export function Sidebar() {
 
         <nav className="px-3 pt-4 flex flex-col gap-0.5">
           {navLinks.map(({ href, label, icon: Icon }) => (
-            <NavLink key={href} href={href} label={label} Icon={Icon} onClick={() => setMobileOpen(false)} />
+            <NavLink
+              key={href}
+              href={href}
+              label={label}
+              Icon={Icon}
+              onClick={() => setMobileOpen(false)}
+            />
           ))}
         </nav>
 
@@ -93,7 +105,12 @@ export function Sidebar() {
   );
 }
 
-function NavLink({ href, label, Icon, onClick }: {
+function NavLink({
+  href,
+  label,
+  Icon,
+  onClick,
+}: {
   href: string;
   label: string;
   Icon: React.ElementType;
@@ -107,7 +124,7 @@ function NavLink({ href, label, Icon, onClick }: {
       href={href}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-[10px] text-sm transition-colors",
+        "flex items-center gap-3 px-3 py-2 rounded-[6px] text-sm transition-colors",
         active
           ? "bg-black/[0.06] dark:bg-white/[0.06] text-foreground"
           : "text-muted-foreground hover:text-foreground hover:bg-black/[0.04] dark:hover:bg-white/[0.04]",
@@ -128,16 +145,19 @@ function FilterSection() {
 
   const connectedSources = sources.filter(({ id }) => connectedIds.includes(id));
 
-  const setParam = useCallback((key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    router.replace(`/feed?${params.toString()}`, { scroll: false });
-  }, [searchParams, router]);
+  const setParam = useCallback(
+    (key: string, value: string | null) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set(key, value);
+      else params.delete(key);
+      router.replace(`/feed?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
-  const activeSource   = searchParams.get("source") as JobSource | null;
+  const activeSource = searchParams.get("source") as JobSource | null;
   const activeWorkMode = searchParams.get("workMode") as WorkMode | null;
-  const activeCity     = searchParams.get("city") ?? "";
+  const activeCity = searchParams.get("city") ?? "";
 
   if (!pathname.startsWith("/feed")) return null;
 
@@ -148,7 +168,7 @@ function FilterSection() {
       </p>
 
       {connectedSources.length === 0 ? (
-        <div className="flex items-start gap-2 py-2 px-2.5 rounded-[10px] bg-muted/50 border border-border">
+        <div className="flex items-start gap-2 py-2 px-2.5 rounded-[6px] bg-muted/50 border border-border">
           <Plug className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-0.5" />
           <p className="text-[11px] text-muted-foreground/50 leading-snug">
             Connect a platform from the top bar to filter by source
@@ -204,7 +224,7 @@ function FilterSection() {
         defaultValue={activeCity}
         placeholder="e.g. Bengaluru"
         onChange={(e) => setParam("city", e.target.value || null)}
-        className="w-full bg-black/[0.04] dark:bg-white/[0.04] border border-border rounded-[10px] px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 transition-colors"
+        className="w-full bg-black/[0.04] dark:bg-white/[0.04] border border-border rounded-[6px] px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 transition-colors"
       />
     </>
   );

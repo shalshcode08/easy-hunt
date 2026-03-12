@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, ExternalLink, CheckCircle } from "lucide-react";
 import { usePlatforms } from "@/contexts/PlatformContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -40,7 +46,9 @@ export function ConnectModal() {
     }
   }
 
-  const label = activeSession ? (PLATFORM_LABELS[activeSession.platform] ?? activeSession.platform) : "";
+  const label = activeSession
+    ? (PLATFORM_LABELS[activeSession.platform] ?? activeSession.platform)
+    : "";
 
   return (
     <Dialog open={!!activeSession} onOpenChange={(open: boolean) => !open && cancelConnect()}>
@@ -53,7 +61,7 @@ export function ConnectModal() {
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-4">
-          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center">
             <CheckCircle className="w-6 h-6 text-muted-foreground" />
           </div>
 
@@ -66,7 +74,13 @@ export function ConnectModal() {
 
           <div className="flex flex-col gap-2 w-full">
             <Button onClick={handleDone} disabled={saving} className="w-full">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : "Done — I'm logged in"}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving…
+                </>
+              ) : (
+                "Done — I'm logged in"
+              )}
             </Button>
             <Button
               variant="outline"
@@ -76,7 +90,11 @@ export function ConnectModal() {
                 if (popupRef.current && !popupRef.current.closed) {
                   popupRef.current.focus();
                 } else if (activeSession) {
-                  popupRef.current = window.open(activeSession.liveViewUrl, "platform-login", "width=1280,height=800");
+                  popupRef.current = window.open(
+                    activeSession.liveViewUrl,
+                    "platform-login",
+                    "width=1280,height=800",
+                  );
                 }
               }}
             >

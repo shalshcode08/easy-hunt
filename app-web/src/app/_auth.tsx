@@ -22,9 +22,9 @@ export default function AuthClient() {
       <div className="relative z-10 w-full max-w-[420px]">
         <SignIn routing="hash" forceRedirectUrl="/feed" fallbackRedirectUrl="/feed" />
       </div>
-      <p className="relative z-10 text-xs" style={{ color: "rgba(236,236,238,0.3)" }}>
+      {/* <p className="relative z-10 text-xs" style={{ color: "rgba(236,236,238,0.3)" }}>
         Free forever · No ads · No sponsored results
-      </p>
+      </p> */}
     </div>
   );
 }

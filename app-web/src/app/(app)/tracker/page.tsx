@@ -2,19 +2,36 @@
 
 import { useState, useEffect } from "react";
 import {
-  DndContext, DragOverlay, PointerSensor,
-  useSensor, useSensors, useDroppable, useDraggable,
-  type DragStartEvent, type DragEndEvent,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+  type DragStartEvent,
+  type DragEndEvent,
 } from "@dnd-kit/core";
-import { MapPin, GripVertical, MoreHorizontal, Trash2, MoveRight, ChevronDown, StickyNote } from "lucide-react";
+import {
+  MapPin,
+  GripVertical,
+  MoreHorizontal,
+  Trash2,
+  MoveRight,
+  ChevronDown,
+  StickyNote,
+} from "lucide-react";
 import Image from "next/image";
 import { cn, timeAgo } from "@/lib/utils";
 import { useSavedJobs, useSavedJobsMutations } from "@/hooks/useSavedJobs";
 import { MOCK_JOBS } from "@/components/jobs/mock";
 import type { SavedJobWithJob } from "@/lib/types";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 type PipelineStatus = "applied" | "interviewing" | "offered" | "rejected";
@@ -30,21 +47,53 @@ const COLUMNS: {
   border: string;
   headerBg: string;
 }[] = [
-  { status: "applied",      label: "Applied",      color: "text-[#6b9eff]",   dot: "bg-[#6b9eff]",   bg: "bg-[#6b9eff]/5",   border: "border-[#6b9eff]/15",   headerBg: "bg-[#6b9eff]/8" },
-  { status: "interviewing", label: "Interviewing", color: "text-[#ff9f68]",   dot: "bg-[#ff9f68]",   bg: "bg-[#ff9f68]/5",   border: "border-[#ff9f68]/15",   headerBg: "bg-[#ff9f68]/8" },
-  { status: "offered",      label: "Offered",      color: "text-primary",     dot: "bg-primary",     bg: "bg-primary/5",     border: "border-primary/15",     headerBg: "bg-primary/8" },
-  { status: "rejected",     label: "Rejected",     color: "text-destructive", dot: "bg-destructive", bg: "bg-destructive/5", border: "border-destructive/15", headerBg: "bg-destructive/8" },
+  {
+    status: "applied",
+    label: "Applied",
+    color: "text-[#6b9eff]",
+    dot: "bg-[#6b9eff]",
+    bg: "bg-[#6b9eff]/5",
+    border: "border-[#6b9eff]/15",
+    headerBg: "bg-[#6b9eff]/8",
+  },
+  {
+    status: "interviewing",
+    label: "Interviewing",
+    color: "text-[#ff9f68]",
+    dot: "bg-[#ff9f68]",
+    bg: "bg-[#ff9f68]/5",
+    border: "border-[#ff9f68]/15",
+    headerBg: "bg-[#ff9f68]/8",
+  },
+  {
+    status: "offered",
+    label: "Offered",
+    color: "text-primary",
+    dot: "bg-primary",
+    bg: "bg-primary/5",
+    border: "border-primary/15",
+    headerBg: "bg-primary/8",
+  },
+  {
+    status: "rejected",
+    label: "Rejected",
+    color: "text-destructive",
+    dot: "bg-destructive",
+    bg: "bg-destructive/5",
+    border: "border-destructive/15",
+    headerBg: "bg-destructive/8",
+  },
 ];
 
 const SOURCE_LOGOS: Record<string, string> = {
   linkedin: "/linkedin-logo.png",
-  naukri:   "/naukri-logo.png",
-  indeed:   "/indeed-logo.png",
+  naukri: "/naukri-logo.png",
+  indeed: "/indeed-logo.png",
 };
 
 const WORK_MODE_CONFIG = {
-  remote: { label: "Remote", color: "text-primary",          bg: "bg-primary/8" },
-  hybrid: { label: "Hybrid", color: "text-[#ff9f68]",        bg: "bg-[#ff9f68]/10" },
+  remote: { label: "Remote", color: "text-primary", bg: "bg-primary/8" },
+  hybrid: { label: "Hybrid", color: "text-[#ff9f68]", bg: "bg-[#ff9f68]/10" },
   onsite: { label: "Onsite", color: "text-muted-foreground", bg: "bg-muted" },
 };
 
@@ -81,37 +130,58 @@ function KanbanCard({
     <div
       ref={setNodeRef}
       className={cn(
-        "rounded-[12px] border bg-card px-3 py-3 flex flex-col gap-2 touch-none select-none",
-        overlay   ? "shadow-xl rotate-1 opacity-95 border-primary/30" : "border-border",
-        isDragging ? "opacity-30" : "hover:border-border/80 hover:shadow-sm transition-all duration-150",
+        "rounded-[6px] border bg-card px-3 py-3 flex flex-col gap-2 touch-none select-none",
+        overlay ? "shadow-xl rotate-1 opacity-95 border-primary/30" : "border-border",
+        isDragging
+          ? "opacity-30"
+          : "hover:border-border/80 hover:shadow-sm transition-all duration-150",
       )}
     >
       <div className="flex items-center gap-2">
-        <button {...listeners} {...attributes} className="text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors cursor-grab active:cursor-grabbing shrink-0">
+        <button
+          {...listeners}
+          {...attributes}
+          className="text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors cursor-grab active:cursor-grabbing shrink-0"
+        >
           <GripVertical className="w-3.5 h-3.5" />
         </button>
-        <div className="w-5 h-5 rounded-[5px] bg-muted border border-border flex items-center justify-center shrink-0 text-[9px] font-bold text-foreground">
+        <div className="w-5 h-5 rounded-[4px] bg-muted border border-border flex items-center justify-center shrink-0 text-[9px] font-bold text-foreground">
           {job.company[0]}
         </div>
         <span className="text-[11px] text-muted-foreground/60 truncate flex-1">{job.company}</span>
-        <Image src={SOURCE_LOGOS[job.source]} alt={job.source} width={12} height={12} className="rounded-[3px] object-contain opacity-40 shrink-0" />
+        <Image
+          src={SOURCE_LOGOS[job.source]}
+          alt={job.source}
+          width={12}
+          height={12}
+          className="rounded-[2px] object-contain opacity-40 shrink-0"
+        />
 
         {!overlay && onMove && onRemove && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="w-5 h-5 rounded-[5px] flex items-center justify-center text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted transition-colors shrink-0 outline-none">
+            <DropdownMenuTrigger className="w-5 h-5 rounded-[4px] flex items-center justify-center text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted transition-colors shrink-0 outline-none">
               <MoreHorizontal className="w-3 h-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom" className="w-44">
               {COLUMNS.filter((c) => c.status !== savedJob.status).map((col) => (
-                <DropdownMenuItem key={col.status} onClick={() => onMove(savedJob.id, col.status)} className="gap-2 cursor-pointer">
+                <DropdownMenuItem
+                  key={col.status}
+                  onClick={() => onMove(savedJob.id, col.status)}
+                  className="gap-2 cursor-pointer"
+                >
                   <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", col.dot)} />
                   <MoveRight className="w-3 h-3 text-muted-foreground/40 shrink-0" />
                   <span className={cn("text-sm font-medium", col.color)}>{col.label}</span>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onRemove(savedJob.id)} variant="destructive" className="gap-2 cursor-pointer">
-                <Trash2 className="w-3.5 h-3.5" /><span className="text-sm font-medium">Remove</span>
+              <DropdownMenuItem
+                onClick={() => onRemove(savedJob.id)}
+                variant="destructive"
+                className="gap-2 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="text-sm font-medium">Remove</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -122,17 +192,31 @@ function KanbanCard({
 
       <div className="flex items-center gap-1.5 px-0.5">
         <MapPin className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-        <span className="text-[11px] text-muted-foreground/50 truncate flex-1">{job.city ?? "—"}</span>
-        <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0", wm.bg, wm.color)}>{wm.label}</span>
+        <span className="text-[11px] text-muted-foreground/50 truncate flex-1">
+          {job.city ?? "—"}
+        </span>
+        <span
+          className={cn(
+            "text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0",
+            wm.bg,
+            wm.color,
+          )}
+        >
+          {wm.label}
+        </span>
       </div>
 
       <div className="flex items-center justify-between px-0.5 pt-0.5 border-t border-border/40">
         {job.salaryRaw ? (
-          <span className="text-[10px] font-semibold text-muted-foreground/60">{job.salaryRaw}</span>
+          <span className="text-[10px] font-semibold text-muted-foreground/60">
+            {job.salaryRaw}
+          </span>
         ) : (
           <span className="text-[10px] text-muted-foreground/25">No salary listed</span>
         )}
-        <span className="text-[10px] text-muted-foreground/30">Applied {timeAgo(savedJob.appliedAt ?? savedJob.createdAt)}</span>
+        <span className="text-[10px] text-muted-foreground/30">
+          Applied {timeAgo(savedJob.appliedAt ?? savedJob.createdAt)}
+        </span>
       </div>
 
       {!overlay && (
@@ -142,7 +226,9 @@ function KanbanCard({
               value={notesValue}
               onChange={(e) => setNotesValue(e.target.value)}
               onBlur={commitNotes}
-              onKeyDown={(e) => { if (e.key === "Escape") commitNotes(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") commitNotes();
+              }}
               className="w-full text-[11px] bg-muted/50 border border-border rounded-[6px] p-1.5 text-muted-foreground resize-none outline-none placeholder:text-muted-foreground/30 min-h-[56px] focus:border-border/80"
               placeholder="Add a note about this application…"
               autoFocus
@@ -154,8 +240,12 @@ function KanbanCard({
               </p>
             </button>
           ) : (
-            <button onClick={() => setEditingNotes(true)} className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors">
-              <StickyNote className="w-3 h-3" />Add note
+            <button
+              onClick={() => setEditingNotes(true)}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+            >
+              <StickyNote className="w-3 h-3" />
+              Add note
             </button>
           )}
         </div>
@@ -166,7 +256,12 @@ function KanbanCard({
 
 // ── Droppable Column ───────────────────────────────────────────────────────────
 function KanbanColumn({
-  column, items, isOver, onMove, onRemove, onUpdateNotes,
+  column,
+  items,
+  isOver,
+  onMove,
+  onRemove,
+  onUpdateNotes,
 }: {
   column: (typeof COLUMNS)[number];
   items: SavedJobWithJob[];
@@ -179,10 +274,23 @@ function KanbanColumn({
 
   return (
     <div className="flex flex-col w-[260px] shrink-0">
-      <div className={cn("flex items-center gap-2 px-3 py-2.5 rounded-t-[14px] border border-b-0", column.headerBg, column.border)}>
+      <div
+        className={cn(
+          "flex items-center gap-2 px-3 py-2.5 rounded-t-[14px] border border-b-0",
+          column.headerBg,
+          column.border,
+        )}
+      >
         <span className={cn("w-2 h-2 rounded-full shrink-0", column.dot)} />
         <span className={cn("text-xs font-semibold flex-1", column.color)}>{column.label}</span>
-        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", column.bg, column.border, column.color)}>
+        <span
+          className={cn(
+            "text-[10px] font-bold px-1.5 py-0.5 rounded-full border",
+            column.bg,
+            column.border,
+            column.color,
+          )}
+        >
           {items.length}
         </span>
       </div>
@@ -196,10 +304,21 @@ function KanbanColumn({
         )}
       >
         {items.map((item) => (
-          <KanbanCard key={item.savedJob.id} item={item} onMove={onMove} onRemove={onRemove} onUpdateNotes={onUpdateNotes} />
+          <KanbanCard
+            key={item.savedJob.id}
+            item={item}
+            onMove={onMove}
+            onRemove={onRemove}
+            onUpdateNotes={onUpdateNotes}
+          />
         ))}
         {items.length === 0 && (
-          <div className={cn("flex-1 flex items-center justify-center rounded-[10px] min-h-[80px]", isOver ? "opacity-100" : "opacity-40")}>
+          <div
+            className={cn(
+              "flex-1 flex items-center justify-center rounded-[6px] min-h-[80px]",
+              isOver ? "opacity-100" : "opacity-40",
+            )}
+          >
             <p className={cn("text-xs font-medium", column.color)}>Drop here</p>
           </div>
         )}
@@ -209,7 +328,11 @@ function KanbanColumn({
 }
 
 // ── Mobile List Row ────────────────────────────────────────────────────────────
-function MobileListRow({ item, onMove, onRemove }: {
+function MobileListRow({
+  item,
+  onMove,
+  onRemove,
+}: {
   item: SavedJobWithJob;
   onMove: (id: string, status: PipelineStatus) => void;
   onRemove: (id: string) => void;
@@ -219,33 +342,52 @@ function MobileListRow({ item, onMove, onRemove }: {
 
   return (
     <div className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
-      <div className="w-8 h-8 rounded-[8px] bg-muted border border-border flex items-center justify-center text-xs font-semibold text-foreground shrink-0 mt-0.5">
+      <div className="w-8 h-8 rounded-[6px] bg-muted border border-border flex items-center justify-center text-xs font-semibold text-foreground shrink-0 mt-0.5">
         {job.company[0]}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground truncate">{job.title}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <Image src={SOURCE_LOGOS[job.source]} alt={job.source} width={11} height={11} className="rounded-[3px] object-contain opacity-50 shrink-0" />
+          <Image
+            src={SOURCE_LOGOS[job.source]}
+            alt={job.source}
+            width={11}
+            height={11}
+            className="rounded-[2px] object-contain opacity-50 shrink-0"
+          />
           <span className="text-[11px] text-muted-foreground/50 truncate">{job.company}</span>
           <span className="text-muted-foreground/30 text-[10px]">·</span>
-          <span className={cn("text-[10px] font-medium px-1 py-0.5 rounded-full", wm.bg, wm.color)}>{wm.label}</span>
+          <span className={cn("text-[10px] font-medium px-1 py-0.5 rounded-full", wm.bg, wm.color)}>
+            {wm.label}
+          </span>
         </div>
-        {savedJob.notes && <p className="text-[11px] text-muted-foreground/50 mt-1 line-clamp-1">{savedJob.notes}</p>}
+        {savedJob.notes && (
+          <p className="text-[11px] text-muted-foreground/50 mt-1 line-clamp-1">{savedJob.notes}</p>
+        )}
       </div>
       <DropdownMenu>
-        <DropdownMenuTrigger className="w-7 h-7 rounded-[8px] flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors shrink-0 outline-none mt-0.5">
+        <DropdownMenuTrigger className="w-7 h-7 rounded-[6px] flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted transition-colors shrink-0 outline-none mt-0.5">
           <MoreHorizontal className="w-3.5 h-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           {COLUMNS.filter((c) => c.status !== savedJob.status).map((col) => (
-            <DropdownMenuItem key={col.status} onClick={() => onMove(savedJob.id, col.status)} className="gap-2 cursor-pointer">
+            <DropdownMenuItem
+              key={col.status}
+              onClick={() => onMove(savedJob.id, col.status)}
+              className="gap-2 cursor-pointer"
+            >
               <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", col.dot)} />
               <span className={cn("text-sm font-medium", col.color)}>{col.label}</span>
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onRemove(savedJob.id)} variant="destructive" className="gap-2 cursor-pointer">
-            <Trash2 className="w-3.5 h-3.5" /><span className="text-sm font-medium">Remove</span>
+          <DropdownMenuItem
+            onClick={() => onRemove(savedJob.id)}
+            variant="destructive"
+            className="gap-2 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="text-sm font-medium">Remove</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -260,15 +402,21 @@ export default function TrackerPage() {
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
-  const [mobileCollapsed, setMobileCollapsed] = useState<Set<PipelineStatus>>(new Set(["rejected"]));
+  const [mobileCollapsed, setMobileCollapsed] = useState<Set<PipelineStatus>>(
+    new Set(["rejected"]),
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const items = (data ?? []).filter(({ savedJob }) => TRACKER_STATUSES.has(savedJob.status));
   const activeItem = items.find(({ savedJob }) => savedJob.id === activeId) ?? null;
 
-  function onDragStart(e: DragStartEvent) { setActiveId(String(e.active.id)); }
-  function onDragOver(e: { over: { id: string } | null }) { setOverId(e.over ? String(e.over.id) : null); }
+  function onDragStart(e: DragStartEvent) {
+    setActiveId(String(e.active.id));
+  }
+  function onDragOver(e: { over: { id: string } | null }) {
+    setOverId(e.over ? String(e.over.id) : null);
+  }
   async function onDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     setActiveId(null);
@@ -294,11 +442,18 @@ export default function TrackerPage() {
           <div className="h-7 w-24 bg-muted rounded-full animate-pulse" />
           <div className="h-3 w-56 bg-muted rounded-full animate-pulse mt-2" />
           <div className="flex gap-2 mt-3">
-            {[1,2,3,4].map((i) => <div key={i} className="h-7 w-24 bg-muted rounded-[10px] animate-pulse" />)}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-7 w-24 bg-muted rounded-[6px] animate-pulse" />
+            ))}
           </div>
         </div>
         <div className="hidden md:flex gap-3 p-4 lg:p-6">
-          {[1,2,3,4].map((i) => <div key={i} className="w-[260px] h-64 rounded-[14px] bg-muted animate-pulse shrink-0" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="w-[260px] h-64 rounded-[14px] bg-muted animate-pulse shrink-0"
+            />
+          ))}
         </div>
       </div>
     );
@@ -315,7 +470,14 @@ export default function TrackerPage() {
           {COLUMNS.map((col) => {
             const count = items.filter(({ savedJob }) => savedJob.status === col.status).length;
             return (
-              <div key={col.status} className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] border", col.bg, col.border)}>
+              <div
+                key={col.status}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] border",
+                  col.bg,
+                  col.border,
+                )}
+              >
                 <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", col.dot)} />
                 <span className={cn("text-[11px] font-semibold", col.color)}>{col.label}</span>
                 <span className={cn("text-[11px] font-bold tabular-nums", col.color)}>{count}</span>
@@ -328,7 +490,12 @@ export default function TrackerPage() {
 
       {/* Desktop kanban */}
       <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto">
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragOver={onDragOver as never} onDragEnd={onDragEnd}>
+        <DndContext
+          sensors={sensors}
+          onDragStart={onDragStart}
+          onDragOver={onDragOver as never}
+          onDragEnd={onDragEnd}
+        >
           <div className="flex gap-3 p-4 lg:p-6 w-max">
             {COLUMNS.map((col) => (
               <KanbanColumn
@@ -359,12 +526,31 @@ export default function TrackerPage() {
               <div key={col.status} className="rounded-[14px] border border-border overflow-hidden">
                 <button
                   onClick={() => toggleMobileCollapse(col.status)}
-                  className={cn("w-full flex items-center gap-2 px-4 py-3 transition-colors hover:opacity-90", col.headerBg)}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-4 py-3 transition-colors hover:opacity-90",
+                    col.headerBg,
+                  )}
                 >
                   <span className={cn("w-2 h-2 rounded-full shrink-0", col.dot)} />
-                  <span className={cn("text-xs font-semibold flex-1 text-left", col.color)}>{col.label}</span>
-                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full border", col.bg, col.border, col.color)}>{colItems.length}</span>
-                  <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground/50 transition-transform", isCollapsed && "-rotate-90")} />
+                  <span className={cn("text-xs font-semibold flex-1 text-left", col.color)}>
+                    {col.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold px-1.5 py-0.5 rounded-full border",
+                      col.bg,
+                      col.border,
+                      col.color,
+                    )}
+                  >
+                    {colItems.length}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "w-3.5 h-3.5 text-muted-foreground/50 transition-transform",
+                      isCollapsed && "-rotate-90",
+                    )}
+                  />
                 </button>
                 {!isCollapsed && (
                   <div className="divide-y divide-border">

@@ -90,6 +90,7 @@ export interface SavedJobWithJob {
 // ── Request Params ─────────────────────────────────────────────────────────────
 
 export interface GetJobsParams {
+  q?: string;
   source?: JobSource;
   city?: string;
   jobType?: JobType;
