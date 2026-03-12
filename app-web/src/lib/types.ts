@@ -114,6 +114,37 @@ export interface UpdateSavedJobBody {
   notes?: string;
 }
 
+// ── Platform Connections ───────────────────────────────────────────────────────
+
+export type ConnectionStatus = "pending" | "active" | "expired" | "error";
+
+export interface PlatformConnection {
+  platform: JobSource;
+  status: ConnectionStatus;
+  cookiesExpiresAt: string | null;
+  lastScrapedAt: string | null;
+  scrapeCount: number;
+  connectedAt: string | null;
+}
+
+export interface UserProfile {
+  clerkId: string;
+  email: string;
+  displayName: string | null;
+  preferredRole: string | null;
+  preferredCity: string | null;
+  preferredExperienceLevel: ExperienceLevel | null;
+  onboardingComplete: boolean;
+}
+
+export interface OnboardBody {
+  email: string;
+  displayName?: string;
+  preferredRole: string;
+  preferredCity: string;
+  preferredExperienceLevel?: ExperienceLevel;
+}
+
 // ── API Responses ──────────────────────────────────────────────────────────────
 
 export interface PaginatedResponse<T> {

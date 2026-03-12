@@ -1,7 +1,7 @@
-import { and, count, desc, eq, gte, lte } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { jobs } from "@/db/schema";
+import { jobs, userJobFeed } from "@/db/schema";
 import { createError } from "@/middleware/errorHandler";
 
 export const getJobsQuerySchema = z.object({
@@ -27,14 +27,32 @@ const datePostedMs: Record<string, number> = {
 };
 
 export const JobsService = {
-  getJobs: async (query: GetJobsQuery) => {
+  getJobs: async (query: GetJobsQuery, clerkId: string) => {
     const { source, city, jobType, workMode, datePosted, salaryMin, salaryMax, page, limit } =
       query;
+
+    // Fetch job IDs from this user's feed
+    const feedRows = await db
+      .select({ jobId: userJobFeed.jobId })
+      .from(userJobFeed)
+      .where(
+        and(
+          eq(userJobFeed.clerkId, clerkId),
+          source ? eq(userJobFeed.platform, source) : undefined,
+        ),
+      );
+
+    // No connections yet — return empty feed instead of leaking global data
+    if (feedRows.length === 0) {
+      return { jobs: [], total: 0, page, limit, totalPages: 0 };
+    }
+
+    const feedJobIds = feedRows.map((r) => r.jobId);
 
     const where = and(
       eq(jobs.isActive, true),
       eq(jobs.isDeleted, false),
-      source ? eq(jobs.source, source) : undefined,
+      inArray(jobs.id, feedJobIds),
       city ? eq(jobs.city, city) : undefined,
       jobType ? eq(jobs.jobType, jobType) : undefined,
       workMode ? eq(jobs.workMode, workMode) : undefined,

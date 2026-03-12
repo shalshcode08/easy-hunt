@@ -1,40 +1,102 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { platformApi, type PlatformId } from "@/lib/api";
+import type { PlatformConnection, UserProfile } from "@/lib/types";
 
-export type PlatformId = "linkedin" | "naukri" | "indeed";
-
-interface PlatformContextValue {
-  connectedIds: PlatformId[];
-  connect: (id: PlatformId) => void;
-  disconnect: (id: PlatformId) => void;
+interface ConnectSession {
+  platform: PlatformId;
+  sessionId: string;
+  liveViewUrl: string;
 }
 
-const PlatformContext = createContext<PlatformContextValue>({
-  connectedIds: [],
-  connect: () => {},
-  disconnect: () => {},
-});
+interface PlatformContextValue {
+  profile: UserProfile | null;
+  connections: PlatformConnection[];
+  loading: boolean;
+  activeSession: ConnectSession | null;
+  justConnected: boolean;
+  startConnect: (platform: PlatformId) => Promise<void>;
+  confirmConnect: () => Promise<void>;
+  cancelConnect: () => void;
+  disconnect: (platform: PlatformId) => Promise<void>;
+  refresh: () => Promise<void>;
+}
+
+const PlatformContext = createContext<PlatformContextValue | null>(null);
 
 export function PlatformProvider({ children }: { children: React.ReactNode }) {
-  // Mock state — replace with real persistence later
-  const [connectedIds, setConnectedIds] = useState<PlatformId[]>([]);
+  const { getToken } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [connections, setConnections] = useState<PlatformConnection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeSession, setActiveSession] = useState<ConnectSession | null>(null);
+  const [justConnected, setJustConnected] = useState(false);
 
-  function connect(id: PlatformId) {
-    setConnectedIds((prev) => prev.includes(id) ? prev : [...prev, id]);
+  const token = useCallback(() => getToken(), [getToken]);
+
+  const refresh = useCallback(async () => {
+    const t = await token();
+    const [prof, conns] = await Promise.all([
+      platformApi.getMe(t),
+      platformApi.getConnections(t),
+    ]);
+    setProfile(prof);
+    setConnections(conns);
+  }, [token]);
+
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
+
+  async function startConnect(platform: PlatformId) {
+    const t = await token();
+    const { sessionId, liveViewUrl } = await platformApi.initConnect(platform, t);
+    setActiveSession({ platform, sessionId, liveViewUrl });
   }
 
-  function disconnect(id: PlatformId) {
-    setConnectedIds((prev) => prev.filter((p) => p !== id));
+  async function confirmConnect() {
+    if (!activeSession) return;
+    const t = await token();
+    await platformApi.saveConnection(activeSession.platform, activeSession.sessionId, t);
+    setActiveSession(null);
+    setJustConnected(true);
+    await refresh();
+  }
+
+  function cancelConnect() {
+    setActiveSession(null);
+  }
+
+  async function disconnect(platform: PlatformId) {
+    const t = await token();
+    await platformApi.disconnect(platform, t);
+    setConnections((prev) => prev.filter((c) => c.platform !== platform));
   }
 
   return (
-    <PlatformContext.Provider value={{ connectedIds, connect, disconnect }}>
+    <PlatformContext.Provider
+      value={{
+        profile,
+        connections,
+        loading,
+        activeSession,
+        justConnected,
+        startConnect,
+        confirmConnect,
+        cancelConnect,
+        disconnect,
+        refresh,
+      }}
+    >
       {children}
     </PlatformContext.Provider>
   );
 }
 
 export function usePlatforms() {
-  return useContext(PlatformContext);
+  const ctx = useContext(PlatformContext);
+  if (!ctx) throw new Error("usePlatforms must be used inside PlatformProvider");
+  return ctx;
 }

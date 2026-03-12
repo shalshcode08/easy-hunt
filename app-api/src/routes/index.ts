@@ -6,6 +6,7 @@ import { docsRouter } from "@/routes/docs";
 import { jobsRouter } from "@/routes/jobs";
 import { savedRouter } from "@/routes/saved";
 import { scrapeRouter } from "@/routes/scrape";
+import { platformRouter } from "@/routes/platform";
 
 export const registerRoutes = (app: Application) => {
   // ── Public ──────────────────────────────────────────────────────────────────
@@ -18,6 +19,7 @@ export const registerRoutes = (app: Application) => {
   v1.use(apiRateLimit);
   v1.use("/jobs", jobsRouter);
   v1.use("/saved", savedRouter);
+  v1.use("/platform", platformRouter);
   app.use("/api/v1", v1);
 
   // ── Admin v1 ────────────────────────────────────────────────────────────────

@@ -14,6 +14,9 @@ import type {
   GetSavedJobsParams,
   SaveJobBody,
   UpdateSavedJobBody,
+  PlatformConnection,
+  UserProfile,
+  OnboardBody,
 } from "./types";
 
 // ── /api/v1/jobs ──────────────────────────────────────────────────────────────
@@ -57,4 +60,40 @@ export const savedApi = {
       token,
       method: "DELETE",
     }),
+};
+
+// ── /api/v1/platform ──────────────────────────────────────────────────────────
+
+export type PlatformId = "linkedin" | "naukri" | "indeed";
+
+export const platformApi = {
+  getMe: (token: string | null) =>
+    apiFetch<UserProfile | null>("/api/v1/platform/me", { token }),
+
+  onboard: (body: OnboardBody, token: string | null) =>
+    apiFetch<UserProfile>("/api/v1/platform/me/onboard", { token, method: "POST", body }),
+
+  getConnections: (token: string | null) =>
+    apiFetch<PlatformConnection[]>("/api/v1/platform/connections", { token }),
+
+  initConnect: (platform: PlatformId, token: string | null) =>
+    apiFetch<{ sessionId: string; liveViewUrl: string }>(
+      `/api/v1/platform/connections/${platform}/init`,
+      { token, method: "POST" },
+    ),
+
+  pollConnection: (platform: PlatformId, sessionId: string, token: string | null) =>
+    apiFetch<{ ready: boolean }>(
+      `/api/v1/platform/connections/${platform}/${sessionId}/poll`,
+      { token },
+    ),
+
+  saveConnection: (platform: PlatformId, sessionId: string, token: string | null) =>
+    apiFetch<{ saved: boolean }>(
+      `/api/v1/platform/connections/${platform}/${sessionId}/save`,
+      { token, method: "POST" },
+    ),
+
+  disconnect: (platform: PlatformId, token: string | null) =>
+    apiFetch<void>(`/api/v1/platform/connections/${platform}`, { token, method: "DELETE" }),
 };

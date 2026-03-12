@@ -1,4 +1,4 @@
-import { chromium, Browser, BrowserContext, Page } from "playwright";
+import { chromium, Browser, BrowserContext, Page, type Cookie } from "playwright";
 import { addExtra } from "playwright-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { logger } from "@/lib/logger";
@@ -68,16 +68,34 @@ class BrowserPool {
     return this.browser!;
   }
 
-  async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
-    await this.semaphore.acquire();
+  private async createContext(cookies?: Cookie[]): Promise<BrowserContext> {
     const browser = await this.ensureBrowser();
-    const context: BrowserContext = await browser.newContext({
+    const context = await browser.newContext({
       userAgent:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
       viewport: { width: 1366, height: 768 },
       locale: "en-US",
       timezoneId: "Asia/Kolkata",
     });
+    if (cookies?.length) await context.addCookies(cookies);
+    return context;
+  }
+
+  async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
+    await this.semaphore.acquire();
+    const context = await this.createContext();
+    const page = await context.newPage();
+    try {
+      return await fn(page);
+    } finally {
+      await context.close().catch(() => {});
+      this.semaphore.release();
+    }
+  }
+
+  async withAuthenticatedPage<T>(cookies: Cookie[], fn: (page: Page) => Promise<T>): Promise<T> {
+    await this.semaphore.acquire();
+    const context = await this.createContext(cookies);
     const page = await context.newPage();
     try {
       return await fn(page);

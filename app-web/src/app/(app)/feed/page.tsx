@@ -1,11 +1,13 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { Plug, Loader2, X } from "lucide-react";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetail } from "@/components/jobs/JobDetail";
 import { useJobs } from "@/hooks/useJobs";
 import { useSavedJobs, useSavedJobsMutations } from "@/hooks/useSavedJobs";
+import { usePlatforms } from "@/contexts/PlatformContext";
 import type { Job, JobSource, WorkMode } from "@/lib/types";
 
 function JobCardSkeleton() {
@@ -29,15 +31,28 @@ function JobCardSkeleton() {
 function FeedContent() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const searchParams = useSearchParams();
+  const { connections, loading: platformsLoading, justConnected, startConnect } = usePlatforms();
 
-  const q          = searchParams.get("q") ?? "";
-  const source     = searchParams.get("source") as JobSource | undefined ?? undefined;
-  const workMode   = searchParams.get("workMode") as WorkMode | undefined ?? undefined;
-  const city       = searchParams.get("city") ?? undefined;
+  const q        = searchParams.get("q") ?? "";
+  const source   = searchParams.get("source") as JobSource | undefined ?? undefined;
+  const workMode = searchParams.get("workMode") as WorkMode | undefined ?? undefined;
+  const city     = searchParams.get("city") ?? undefined;
 
-  const { data, isLoading, error } = useJobs({ source, workMode, city, limit: 50 });
-  const { data: savedData }        = useSavedJobs();
-  const mutations                  = useSavedJobsMutations();
+  const hasActiveConnections = connections.some((c) => c.status === "active");
+  // Any connected platform that has never completed a scrape yet
+  const isScrapePending = hasActiveConnections && connections.some((c) => c.status === "active" && c.scrapeCount === 0);
+  const showScrapingBanner = justConnected || isScrapePending;
+
+  const { data, isLoading, error, mutate } = useJobs({ source, workMode, city, limit: 50 });
+  const { data: savedData }                = useSavedJobs();
+  const mutations                          = useSavedJobsMutations();
+
+  // Poll every 10s while scraping is pending, stop once jobs arrive
+  useEffect(() => {
+    if (!showScrapingBanner) return;
+    const id = setInterval(() => mutate(), 10_000);
+    return () => clearInterval(id);
+  }, [showScrapingBanner, mutate]);
 
   const savedJobIds = new Set(savedData?.map((s) => s.savedJob.jobId) ?? []);
 
@@ -64,6 +79,14 @@ function FeedContent() {
   return (
     <div className="flex flex-1 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-y-auto">
+        {/* Scraping in progress banner */}
+        {showScrapingBanner && (
+          <div className="mx-4 lg:mx-6 mt-4 flex items-center gap-3 px-4 py-3 rounded-[10px] bg-primary/10 border border-primary/20 text-sm text-primary shrink-0">
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+            <span className="flex-1">Fetching your jobs — this takes about a minute.</span>
+          </div>
+        )}
+
         <div className="px-4 lg:px-6 pt-4 pb-2 shrink-0">
           {isLoading ? (
             <p className="text-xs text-muted-foreground/50">Loading jobs…</p>
@@ -87,6 +110,35 @@ function FeedContent() {
               <p className="text-xs text-muted-foreground/50 mt-1">
                 {error.isServerError ? "Server error — try again later" : error.message}
               </p>
+            </div>
+          ) : jobs.length === 0 && showScrapingBanner ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+              <Loader2 className="w-6 h-6 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground/60 mt-2">Scraping jobs for you…</p>
+              <p className="text-xs text-muted-foreground/40">Usually takes under a minute. The page will update automatically.</p>
+            </div>
+          ) : jobs.length === 0 && !platformsLoading && !hasActiveConnections ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Plug className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Connect a platform to get started</p>
+                <p className="text-xs text-muted-foreground/50 mt-1 max-w-[260px]">
+                  Link your LinkedIn, Naukri, or Indeed account — we'll fetch jobs personalised to you.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {(["linkedin", "naukri", "indeed"] as const).map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => startConnect(id)}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-[8px] bg-muted border border-border hover:border-primary/30 hover:bg-primary/5 transition-colors text-foreground capitalize"
+                  >
+                    {id}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : jobs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">

@@ -14,13 +14,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// ── Custom types ─────────────────────────────────────────────────────────────
-
 const tsvector = customType<{ data: string }>({
   dataType: () => "tsvector",
 });
 
-// ── Enums ────────────────────────────────────────────────────────────────────
+// ── Enums ─────────────────────────────────────────────────────────────────────
 
 export const jobSourceEnum = pgEnum("job_source", ["linkedin", "naukri", "indeed"]);
 
@@ -64,51 +62,43 @@ export const scrapeStatusEnum = pgEnum("scrape_status", [
 
 export const scrapeTriggerEnum = pgEnum("scrape_trigger", ["scheduled", "manual", "backfill"]);
 
-// ── Tables ───────────────────────────────────────────────────────────────────
+export const connectionStatusEnum = pgEnum("connection_status", [
+  "pending",
+  "active",
+  "expired",
+  "error",
+]);
 
-// ── jobs ─────────────────────────────────────────────────────────────────────
+// ── jobs ──────────────────────────────────────────────────────────────────────
+
 export const jobs = pgTable(
   "jobs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-
-    // Core identifiers
     url: text("url").notNull(),
-    urlHash: char("url_hash", { length: 64 }).notNull(), // SHA-256(url) — dedup key
-    externalId: text("external_id"), // platform's own job ID
-
-    // Job details
+    urlHash: char("url_hash", { length: 64 }).notNull(),
+    externalId: text("external_id"),
     title: text("title").notNull(),
-    titleNormalized: text("title_normalized").notNull(), // lowercase, stripped
+    titleNormalized: text("title_normalized").notNull(),
     company: text("company").notNull(),
-    companyNormalized: text("company_normalized").notNull(), // lowercase, stripped
-
-    // Location
-    locationRaw: text("location_raw"), // exactly as scraped
-    city: text("city"), // normalized: "bengaluru"
+    companyNormalized: text("company_normalized").notNull(),
+    locationRaw: text("location_raw"),
+    city: text("city"),
     state: text("state"),
-    country: char("country", { length: 2 }).default("IN"), // ISO-3166 alpha-2
+    country: char("country", { length: 2 }).default("IN"),
     isRemote: boolean("is_remote").notNull().default(false),
     workMode: workModeEnum("work_mode"),
-
-    // Classification
     source: jobSourceEnum("source").notNull(),
     jobType: jobTypeEnum("job_type"),
     experienceLevel: experienceLevelEnum("experience_level"),
-
-    // Salary (structured + raw)
-    salaryRaw: text("salary_raw"), // "₹15–25 LPA"
-    salaryMin: integer("salary_min"), // annual, in INR
+    salaryRaw: text("salary_raw"),
+    salaryMin: integer("salary_min"),
     salaryMax: integer("salary_max"),
     salaryCurrency: char("salary_currency", { length: 3 }).default("INR"),
-
-    // Content
     description: text("description"),
-    descriptionTsv: tsvector("description_tsv"), // FTS vector, trigger-maintained
-    skillsRaw: text("skills_raw").array(), // ["React", "Node.js"]
-    applyUrl: text("apply_url"), // direct apply link
-
-    // Lifecycle
+    descriptionTsv: tsvector("description_tsv"),
+    skillsRaw: text("skills_raw").array(),
+    applyUrl: text("apply_url"),
     isActive: boolean("is_active").notNull().default(true),
     isDeleted: boolean("is_deleted").notNull().default(false),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -116,54 +106,82 @@ export const jobs = pgTable(
     scrapedAt: timestamp("scraped_at", { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
-
-    // Audit
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    // Dedup — hit on every scraper upsert
     uniqueIndex("uq_jobs_url_hash").on(t.urlHash),
-
-    // Primary feed query: source + active + date
     index("idx_jobs_feed").on(t.source, t.isActive, t.isDeleted, t.postedAt),
-
-    // Location filter
     index("idx_jobs_city").on(t.city, t.isActive, t.isDeleted, t.postedAt),
-
-    // Job type filter
     index("idx_jobs_job_type").on(t.jobType, t.isActive, t.isDeleted, t.postedAt),
-
-    // Work mode filter
     index("idx_jobs_work_mode").on(t.workMode, t.isActive, t.isDeleted, t.postedAt),
-
-    // Compound multi-filter (source + city + jobType)
     index("idx_jobs_compound").on(t.source, t.city, t.jobType, t.isActive, t.isDeleted, t.postedAt),
-
-    // Scraper re-confirmation / expiry job
     index("idx_jobs_last_seen").on(t.source, t.lastSeenAt),
-
-    // Salary range filter (partial — only structured rows)
     index("idx_jobs_salary")
       .on(t.salaryMin, t.salaryMax)
       .where(sql`${t.salaryMin} IS NOT NULL`),
-
-    // Company filter
     index("idx_jobs_company").on(t.companyNormalized, t.isActive, t.isDeleted),
-
-    // External ID lookup (partial)
     index("idx_jobs_external_id")
       .on(t.source, t.externalId)
       .where(sql`${t.externalId} IS NOT NULL`),
-
-    // Admin / scraper dashboard
     index("idx_jobs_scraped_at")
       .on(t.scrapedAt)
       .where(sql`${t.isActive} = true AND ${t.isDeleted} = false`),
   ],
 );
 
+// ── platform_connections ──────────────────────────────────────────────────────
+
+export const platformConnections = pgTable(
+  "platform_connections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkId: text("clerk_id").notNull(),
+    platform: jobSourceEnum("platform").notNull(),
+    status: connectionStatusEnum("status").notNull().default("pending"),
+    // AES-256-GCM encrypted JSON of playwright Cookie[]
+    encryptedCookies: text("encrypted_cookies"),
+    cookiesIv: text("cookies_iv"),
+    cookiesTag: text("cookies_tag"),
+    cookiesObtainedAt: timestamp("cookies_obtained_at", { withTimezone: true }),
+    cookiesExpiresAt: timestamp("cookies_expires_at", { withTimezone: true }),
+    lastScrapedAt: timestamp("last_scraped_at", { withTimezone: true }),
+    scrapeCount: integer("scrape_count").notNull().default(0),
+    browserbaseSessionId: text("browserbase_session_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("uq_platform_connections").on(t.clerkId, t.platform),
+    index("idx_platform_connections_clerk").on(t.clerkId, t.status),
+    index("idx_platform_connections_active")
+      .on(t.platform, t.status)
+      .where(sql`${t.status} = 'active'`),
+  ],
+);
+
+// ── user_job_feed ─────────────────────────────────────────────────────────────
+
+export const userJobFeed = pgTable(
+  "user_job_feed",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clerkId: text("clerk_id").notNull(),
+    jobId: uuid("job_id")
+      .notNull()
+      .references(() => jobs.id, { onDelete: "cascade" }),
+    platform: jobSourceEnum("platform").notNull(),
+    scrapedAt: timestamp("scraped_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("uq_user_job_feed").on(t.clerkId, t.jobId),
+    index("idx_user_job_feed_clerk").on(t.clerkId, t.platform, t.scrapedAt),
+    index("idx_user_job_feed_job").on(t.jobId),
+  ],
+);
+
 // ── saved_jobs ────────────────────────────────────────────────────────────────
+
 export const savedJobs = pgTable(
   "saved_jobs",
   {
@@ -174,7 +192,7 @@ export const savedJobs = pgTable(
       .references(() => jobs.id, { onDelete: "cascade" }),
     status: savedStatusEnum("status").notNull().default("saved"),
     notes: text("notes"),
-    appliedAt: timestamp("applied_at", { withTimezone: true }), // set when → applied
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
     isDeleted: boolean("is_deleted").notNull().default(false),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -182,19 +200,14 @@ export const savedJobs = pgTable(
   },
   (t) => [
     unique("uq_saved_jobs_clerk_job").on(t.clerkId, t.jobId),
-
-    // User's feed — primary query
     index("idx_saved_jobs_clerk").on(t.clerkId, t.isDeleted, t.updatedAt),
-
-    // Status filter
     index("idx_saved_jobs_clerk_status").on(t.clerkId, t.status, t.isDeleted),
-
-    // FK cascade support
     index("idx_saved_jobs_job_id").on(t.jobId),
   ],
 );
 
 // ── saved_job_status_history ──────────────────────────────────────────────────
+
 export const savedJobStatusHistory = pgTable(
   "saved_job_status_history",
   {
@@ -202,22 +215,20 @@ export const savedJobStatusHistory = pgTable(
     savedJobId: uuid("saved_job_id")
       .notNull()
       .references(() => savedJobs.id, { onDelete: "cascade" }),
-    clerkId: text("clerk_id").notNull(), // denormalized for query perf
-    fromStatus: savedStatusEnum("from_status"), // NULL on first transition
+    clerkId: text("clerk_id").notNull(),
+    fromStatus: savedStatusEnum("from_status"),
     toStatus: savedStatusEnum("to_status").notNull(),
-    notesSnapshot: text("notes_snapshot"), // snapshot at time of change
+    notesSnapshot: text("notes_snapshot"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    // Timeline for a single saved job
     index("idx_status_history_saved_job").on(t.savedJobId, t.createdAt),
-
-    // All activity for a user
     index("idx_status_history_clerk").on(t.clerkId, t.createdAt),
   ],
 );
 
 // ── scrape_logs ───────────────────────────────────────────────────────────────
+
 export const scrapeLogs = pgTable(
   "scrape_logs",
   {
@@ -240,15 +251,10 @@ export const scrapeLogs = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    // Analytics: logs by source over time
     index("idx_scrape_logs_source").on(t.source, t.startedAt),
-
-    // Health monitoring: failed/partial runs
     index("idx_scrape_logs_failures")
       .on(t.status, t.startedAt)
       .where(sql`${t.status} != 'success'`),
-
-    // Zombie run detection: open runs
     index("idx_scrape_logs_zombie")
       .on(t.startedAt)
       .where(sql`${t.finishedAt} IS NULL`),
@@ -256,6 +262,7 @@ export const scrapeLogs = pgTable(
 );
 
 // ── scrape_queries ────────────────────────────────────────────────────────────
+
 export const scrapeQueries = pgTable(
   "scrape_queries",
   {
@@ -272,8 +279,6 @@ export const scrapeQueries = pgTable(
   },
   (t) => [
     unique("uq_scrape_queries").on(t.source, t.role, t.location),
-
-    // Scheduler startup
     index("idx_scrape_queries_active")
       .on(t.source, t.isActive)
       .where(sql`${t.isActive} = true`),
@@ -281,6 +286,7 @@ export const scrapeQueries = pgTable(
 );
 
 // ── users ─────────────────────────────────────────────────────────────────────
+
 export const users = pgTable(
   "users",
   {
@@ -288,15 +294,17 @@ export const users = pgTable(
     clerkId: text("clerk_id").notNull(),
     email: text("email").notNull(),
     displayName: text("display_name"),
-    preferredLocation: text("preferred_location"),
+    preferredRole: text("preferred_role"),
+    preferredCity: text("preferred_city"),
     preferredJobType: jobTypeEnum("preferred_job_type"),
+    preferredExperienceLevel: experienceLevelEnum("preferred_experience_level"),
+    onboardingComplete: boolean("onboarding_complete").notNull().default(false),
     isActive: boolean("is_active").notNull().default(true),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    // Auth middleware lookup — every authenticated request
     uniqueIndex("uq_users_clerk_id").on(t.clerkId),
   ],
 );
@@ -315,3 +323,7 @@ export type ScrapeQuery = typeof scrapeQueries.$inferSelect;
 export type NewScrapeQuery = typeof scrapeQueries.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type PlatformConnection = typeof platformConnections.$inferSelect;
+export type NewPlatformConnection = typeof platformConnections.$inferInsert;
+export type UserJobFeed = typeof userJobFeed.$inferSelect;
+export type NewUserJobFeed = typeof userJobFeed.$inferInsert;

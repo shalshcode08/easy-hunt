@@ -3,7 +3,7 @@ import { JobsService, type GetJobsQuery } from "@/services/jobs";
 
 export const getJobs = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await JobsService.getJobs(req.query as unknown as GetJobsQuery);
+    const result = await JobsService.getJobs(req.query as unknown as GetJobsQuery, req.clerkId);
     res.json(result);
   } catch (err) {
     next(err);

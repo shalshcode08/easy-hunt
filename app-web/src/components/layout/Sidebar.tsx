@@ -123,7 +123,8 @@ function FilterSection() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { connectedIds } = usePlatforms();
+  const { connections } = usePlatforms();
+  const connectedIds = connections.filter((c) => c.status === "active").map((c) => c.platform);
 
   const connectedSources = sources.filter(({ id }) => connectedIds.includes(id));
 

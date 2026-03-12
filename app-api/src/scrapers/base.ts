@@ -1,4 +1,4 @@
-import { Page } from "playwright";
+import { type Cookie, type Page } from "playwright";
 import { browserPool } from "@/lib/browser";
 import { logger } from "@/lib/logger";
 
@@ -23,7 +23,21 @@ export interface RawJob {
 
 export abstract class BaseScraper {
   abstract source: JobSource;
-  abstract scrape(query: ScrapeQuery): Promise<RawJob[]>;
+
+  // Anonymous scrape — called by the legacy queue worker
+  async scrape(query: ScrapeQuery): Promise<RawJob[]> {
+    return this.withPage((page) => this.scrapeOnPage(page, query));
+  }
+
+  // Authenticated scrape — injects session cookies before navigating
+  async scrapeAuthenticated(cookies: Cookie[], query: ScrapeQuery): Promise<RawJob[]> {
+    return browserPool.withAuthenticatedPage(cookies, (page) =>
+      this.scrapeOnPage(page, query),
+    );
+  }
+
+  // Core extraction logic — implemented by each platform scraper
+  protected abstract scrapeOnPage(page: Page, query: ScrapeQuery): Promise<RawJob[]>;
 
   protected async withPage<T>(fn: (page: Page) => Promise<T>): Promise<T> {
     const maxAttempts = 3;
@@ -41,7 +55,6 @@ export abstract class BaseScraper {
         }
       }
     }
-
     throw lastError;
   }
 
