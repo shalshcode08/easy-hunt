@@ -21,6 +21,7 @@ interface PlatformContextValue {
   confirmConnect: () => Promise<void>;
   cancelConnect: () => void;
   disconnect: (platform: PlatformId) => Promise<void>;
+  rescrape: (platform: PlatformId) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -75,6 +76,12 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
     setConnections((prev) => prev.filter((c) => c.platform !== platform));
   }
 
+  async function rescrape(platform: PlatformId) {
+    const t = await token();
+    await platformApi.rescrape(platform, t);
+    setJustConnected(true);
+  }
+
   return (
     <PlatformContext.Provider
       value={{
@@ -87,6 +94,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         confirmConnect,
         cancelConnect,
         disconnect,
+        rescrape,
         refresh,
       }}
     >

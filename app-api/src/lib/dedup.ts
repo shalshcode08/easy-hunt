@@ -24,6 +24,9 @@ export const upsertJobs = async (
           lastSeenAt: sql`now()`,
           isActive: true,
           updatedAt: sql`now()`,
+          // Enrich existing rows if new scrape has richer data
+          description: sql`CASE WHEN EXCLUDED.description IS NOT NULL THEN EXCLUDED.description ELSE ${jobs.description} END`,
+          applyUrl: sql`CASE WHEN EXCLUDED.apply_url IS NOT NULL THEN EXCLUDED.apply_url ELSE ${jobs.applyUrl} END`,
         },
       })
       .returning({ id: jobs.id, createdAt: jobs.createdAt, updatedAt: jobs.updatedAt });

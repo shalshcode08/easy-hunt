@@ -114,18 +114,27 @@ export const PlatformService = {
     if (!conn) throw createError("Connection not found", 404, "NOT_FOUND");
     if (conn.status === "active") return; // already saved, idempotent
 
-    const cookies = await extractAndTerminate(sessionId, platform);
-    const payload = encrypt(JSON.stringify(cookies));
-
-    await db
-      .update(platformConnections)
-      .set({
-        status: "active",
+    // Try to extract cookies from the Browserbase session (may be empty if user logged in elsewhere)
+    let cookieFields: Record<string, unknown> = {};
+    try {
+      const cookies = await extractAndTerminate(sessionId, platform);
+      const payload = encrypt(JSON.stringify(cookies));
+      cookieFields = {
         encryptedCookies: payload.data,
         cookiesIv: payload.iv,
         cookiesTag: payload.tag,
         cookiesObtainedAt: new Date(),
         cookiesExpiresAt: cookieExpiry(platform),
+      };
+    } catch {
+      // No auth cookies in Browserbase session — connection still saved, falls back to anonymous scraping
+    }
+
+    await db
+      .update(platformConnections)
+      .set({
+        status: "active",
+        ...cookieFields,
         browserbaseSessionId: null,
         updatedAt: new Date(),
       })

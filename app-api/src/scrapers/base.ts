@@ -15,6 +15,7 @@ export interface RawJob {
   company: string;
   location: string;
   url: string;
+  applyUrl?: string;
   description?: string;
   salary?: string;
   jobType?: string;

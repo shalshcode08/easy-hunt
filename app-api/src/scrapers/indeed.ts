@@ -62,6 +62,9 @@ export class IndeedScraper extends BaseScraper {
           const dateText = await card
             .$eval("[data-testid='myJobsStateDate'] span, .date", (el) => el.textContent?.trim())
             .catch(() => null);
+          const snippet = await card
+            .$eval(".job-snippet, .jobCardShelfContainer", (el) => el.textContent?.trim())
+            .catch(() => null);
 
           if (!title || !company || !href) continue;
 
@@ -70,12 +73,12 @@ export class IndeedScraper extends BaseScraper {
             title, company,
             location: location ?? query.location,
             url: cleanUrl,
+            applyUrl: cleanUrl,
             salary: salary ?? undefined,
+            description: snippet ?? undefined,
             postedAt: dateText ? parsePostedDate(dateText) : undefined,
           });
-        } catch {
-          continue;
-        }
+        } catch { continue; }
       }
 
       if (jobs.length >= query.limit) break;

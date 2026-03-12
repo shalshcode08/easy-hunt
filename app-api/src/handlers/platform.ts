@@ -79,3 +79,13 @@ export const disconnect = async (req: Request, res: Response, next: NextFunction
     next(err);
   }
 };
+
+export const rescrape = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const platform = platformParam.parse(req.params.platform) as JobSource;
+    await PlatformService.queueImmediateScrape(req.clerkId, platform);
+    res.json({ queued: true });
+  } catch (err) {
+    next(err);
+  }
+};

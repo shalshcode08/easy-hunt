@@ -1,4 +1,5 @@
 import type { PgBoss } from "pg-boss";
+import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { userJobFeed } from "@/db/schema";
 import { logger } from "@/lib/logger";
@@ -6,6 +7,8 @@ import { QUEUE_NAMES, type ScrapeJobData, type ScrapeClusterJobData } from "@/qu
 import { hashUrl, upsertJobs } from "@/lib/dedup";
 import { parseLocation } from "@/lib/location";
 import { PlatformService } from "@/services/platform";
+import { eq } from "drizzle-orm";
+import { platformConnections } from "@/db/schema";
 import { LinkedInScraper } from "@/scrapers/linkedin";
 import { NaukriScraper } from "@/scrapers/naukri";
 import { IndeedScraper } from "@/scrapers/indeed";
@@ -35,6 +38,7 @@ function toNewJobs(rawJobs: Awaited<ReturnType<BaseScraper["scrape"]>>, source: 
       workMode,
       isRemote,
       salaryRaw: raw.salary ?? null,
+      applyUrl: raw.applyUrl ?? null,
       description: raw.description ?? null,
       postedAt: raw.postedAt ?? null,
     };
@@ -94,7 +98,6 @@ export const registerWorkers = async (boss: PgBoss): Promise<void> => {
             });
           } else {
             logger.warn({ platform, cookieSourceClerkId }, "cookies missing, falling back to anonymous");
-            await PlatformService.markExpired(cookieSourceClerkId, platform);
             rawJobs = await scraper.scrape({ role, location: city, limit });
           }
 
@@ -128,6 +131,14 @@ export const registerWorkers = async (boss: PgBoss): Promise<void> => {
               .insert(userJobFeed)
               .values(feedRows)
               .onConflictDoNothing();
+          }
+
+          // Increment scrape count for all users in cluster
+          for (const clerkId of clerkIds) {
+            await db
+              .update(platformConnections)
+              .set({ lastScrapedAt: new Date(), scrapeCount: sql`scrape_count + 1`, updatedAt: new Date() })
+              .where(eq(platformConnections.clerkId, clerkId));
           }
 
           logger.info(

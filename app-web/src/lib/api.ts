@@ -96,4 +96,7 @@ export const platformApi = {
 
   disconnect: (platform: PlatformId, token: string | null) =>
     apiFetch<void>(`/api/v1/platform/connections/${platform}`, { token, method: "DELETE" }),
+
+  rescrape: (platform: PlatformId, token: string | null) =>
+    apiFetch<{ queued: boolean }>(`/api/v1/platform/connections/${platform}/rescrape`, { token, method: "POST" }),
 };

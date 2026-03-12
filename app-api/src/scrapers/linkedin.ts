@@ -32,13 +32,16 @@ export class LinkedInScraper extends BaseScraper {
 
   protected async scrapeOnPage(page: Page, query: ScrapeQuery): Promise<RawJob[]> {
     const jobs: RawJob[] = [];
-    const url = buildUrl(query.role, query.location);
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.goto(buildUrl(query.role, query.location), {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
     await page.waitForSelector(".base-card", { timeout: 15_000 }).catch(() => {});
 
     while (jobs.length < query.limit) {
       const cards = await page.$$(".base-card");
+      if (cards.length === 0) break;
 
       for (const card of cards) {
         if (jobs.length >= query.limit) break;
@@ -68,10 +71,15 @@ export class LinkedInScraper extends BaseScraper {
             if (isNaN(postedAt.getTime())) postedAt = parseRelativeDate(dateText);
           }
 
-          jobs.push({ title, company, location: location ?? query.location, url: cleanUrl, postedAt });
-        } catch {
-          continue;
-        }
+          jobs.push({
+            title,
+            company,
+            location: location ?? query.location,
+            url: cleanUrl,
+            applyUrl: cleanUrl,
+            postedAt,
+          });
+        } catch { continue; }
       }
 
       if (jobs.length >= query.limit) break;

@@ -47,7 +47,7 @@ const PLATFORMS: {
 ];
 
 export function TopBar() {
-  const { connections, startConnect, disconnect } = usePlatforms();
+  const { connections, startConnect, disconnect, rescrape } = usePlatforms();
   const [open, setOpen] = useState(false);
   const [connecting, setConnecting] = useState<PlatformId | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -194,13 +194,22 @@ export function TopBar() {
                     </div>
 
                     {isConnected ? (
-                      <button
-                        onClick={() => handleDisconnect(platform.id)}
-                        className="flex items-center gap-1.5 shrink-0 text-xs font-medium text-primary hover:text-destructive transition-colors"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        Connected
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => rescrape(platform.id)}
+                          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                          title="Refresh jobs"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDisconnect(platform.id)}
+                          className="flex items-center gap-1 text-xs font-medium text-primary hover:text-destructive transition-colors"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Connected
+                        </button>
+                      </div>
                     ) : isExpired ? (
                       <button
                         onClick={() => handleConnect(platform.id)}

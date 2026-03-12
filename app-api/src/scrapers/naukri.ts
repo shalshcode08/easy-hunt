@@ -10,11 +10,6 @@ function buildUrl(role: string, location: string): string {
   return `${BASE_URL}/${slug}-jobs-in-${loc}`;
 }
 
-function parseSalary(text: string): string | undefined {
-  const t = text.trim();
-  return t && t !== "Not Disclosed" ? t : undefined;
-}
-
 export class NaukriScraper extends BaseScraper {
   source = "naukri" as const;
 
@@ -36,12 +31,12 @@ export class NaukriScraper extends BaseScraper {
       for (const card of cards) {
         if (jobs.length >= query.limit) break;
         try {
-          const title    = await card.$eval("a.title", (el) => el.textContent?.trim()).catch(() => null);
-          const company  = await card.$eval("a.comp-name, .comp-name", (el) => el.textContent?.trim()).catch(() => null);
-          const href     = await card.$eval("a.title", (el) => (el as HTMLAnchorElement).href).catch(() => null);
-          const location = await card.$eval(".locWdth, .location", (el) => el.textContent?.trim()).catch(() => null);
-          const salaryRaw = await card.$eval(".salary, .sal", (el) => el.textContent?.trim()).catch(() => null);
-          const experience = await card.$eval(".expwdth, .experience", (el) => el.textContent?.trim()).catch(() => null);
+          const title     = await card.$eval("a.title", (el) => el.textContent?.trim()).catch(() => null);
+          const company   = await card.$eval("a.comp-name, .comp-name", (el) => el.textContent?.trim()).catch(() => null);
+          const href      = await card.$eval("a.title", (el) => (el as HTMLAnchorElement).href).catch(() => null);
+          const location  = await card.$eval(".locWdth, .location", (el) => el.textContent?.trim()).catch(() => null);
+          const salary    = await card.$eval(".salary, .sal", (el) => el.textContent?.trim()).catch(() => null);
+          const snippet   = await card.$eval(".job-description, .jd-snippet, .desc", (el) => el.textContent?.trim()).catch(() => null);
 
           if (!title || !company || !href) continue;
 
@@ -50,12 +45,11 @@ export class NaukriScraper extends BaseScraper {
             company,
             location: location ?? query.location,
             url: href,
-            salary: salaryRaw ? parseSalary(salaryRaw) : undefined,
-            jobType: experience ?? undefined,
+            applyUrl: href,
+            salary: salary && salary !== "Not Disclosed" ? salary : undefined,
+            description: snippet ?? undefined,
           });
-        } catch {
-          continue;
-        }
+        } catch { continue; }
       }
 
       if (jobs.length >= query.limit) break;

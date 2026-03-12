@@ -7,6 +7,7 @@ import {
   saveConnection,
   getConnections,
   disconnect,
+  rescrape,
 } from "@/handlers/platform";
 
 export const platformRouter = Router();
@@ -21,3 +22,4 @@ platformRouter.post("/connections/:platform/init", initConnect);
 platformRouter.get("/connections/:platform/:sessionId/poll", pollConnection);
 platformRouter.post("/connections/:platform/:sessionId/save", saveConnection);
 platformRouter.delete("/connections/:platform", disconnect);
+platformRouter.post("/connections/:platform/rescrape", rescrape);
