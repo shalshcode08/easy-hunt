@@ -2,6 +2,7 @@ import { chromium, Browser, BrowserContext, Page, type Cookie } from "playwright
 import { addExtra } from "playwright-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { logger } from "@/lib/logger";
+import { env } from "@/env";
 
 const CONCURRENCY = 3;
 
@@ -42,7 +43,8 @@ class BrowserPool {
     try {
       const pw = addExtra(chromium);
       pw.use(StealthPlugin());
-      this.browser = await pw.launch({
+
+      const launchOptions: Parameters<typeof pw.launch>[0] = {
         headless: true,
         args: [
           "--no-sandbox",
@@ -50,7 +52,18 @@ class BrowserPool {
           "--disable-dev-shm-usage",
           "--disable-blink-features=AutomationControlled",
         ],
-      });
+      };
+
+      if (env.PROXY_SERVER) {
+        launchOptions.proxy = {
+          server: env.PROXY_SERVER,
+          username: env.PROXY_USERNAME,
+          password: env.PROXY_PASSWORD,
+        };
+        logger.info("browser configured with proxy");
+      }
+
+      this.browser = await pw.launch(launchOptions);
       this.browser.on("disconnected", () => {
         logger.warn("browser disconnected — will relaunch on next acquire");
         this.browser = null;

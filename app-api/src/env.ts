@@ -11,6 +11,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   FRONTEND_URL: z.url(),
+  PROXY_SERVER: z.string().optional(),
+  PROXY_USERNAME: z.string().optional(),
+  PROXY_PASSWORD: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
