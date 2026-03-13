@@ -63,7 +63,7 @@ export function TopBar() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
   const [inputValue, setInputValue] = useState(query);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Sync input if URL changes externally (e.g. browser back/forward)
   useEffect(() => {
